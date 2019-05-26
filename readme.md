@@ -1,4 +1,6 @@
 # Swup Preload plugin
+Makes swup preload any link on hover. 
+Also preloads any links with `data-swup-preload` attribute as soon as they appear in the page.
 
 ## Instalation
 This plugin can be installed with npm
