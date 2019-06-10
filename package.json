@@ -1,6 +1,6 @@
 {
   "name": "@swup/preload-plugin",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "Swup preload plugin.",
   "main": "lib/index.js",
   "scripts": {

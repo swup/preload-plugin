@@ -248,7 +248,7 @@ var PreloadPlugin = function (_Plugin) {
             swup.preloadPages = this.preloadPages;
 
             // register mouseover handler
-            swup.delegatedListeners.mouseover = (0, _delegate2.default)(document.body, swup.options.LINK_SELECTOR, 'mouseover', this.onMouseover.bind(this));
+            swup.delegatedListeners.mouseover = (0, _delegate2.default)(document.body, swup.options.linkSelector, 'mouseover', this.onMouseover.bind(this));
 
             // initial preload of page form links with [data-swup-preload]
             swup.preloadPages();
