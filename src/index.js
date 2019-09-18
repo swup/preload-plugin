@@ -3,104 +3,151 @@ import delegate from 'delegate';
 import { queryAll } from 'swup/lib/utils';
 import { Link, getCurrentUrl, fetch } from 'swup/lib/helpers';
 
+import 'requestidlecallback';
+
 export default class PreloadPlugin extends Plugin {
-    name = "PreloadPlugin";
+	name = 'PreloadPlugin';
 
-    mount() {
-        const swup = this.swup;
+	constructor(options = {}) {
+		super();
 
-        swup._handlers.pagePreloaded = [];
-        swup._handlers.hoverLink = [];
+		const defaultOptions = {
+			useRequestIdleCallback: true,
+			useOnMouseOverPreload: true
+		};
 
-        swup.preloadPage = this.preloadPage;
-        swup.preloadPages = this.preloadPages;
+		this.options = {
+			...defaultOptions,
+			...options
+		};
+	}
 
-        // register mouseover handler
-        swup.delegatedListeners.mouseover = delegate(
-            document.body,
-            swup.options.linkSelector,
-            'mouseover',
-            this.onMouseover.bind(this)
-        );
+	mount() {
+		const swup = this.swup;
 
-        // initial preload of page form links with [data-swup-preload]
-        swup.preloadPages();
+		swup._handlers.pagePreloaded = [];
+		swup._handlers.hoverLink = [];
 
-        // do the same on every content replace
-        swup.on('contentReplaced', this.onContentReplaced)
-    }
+		swup.preloadPage = this.preloadPage;
+		swup.preloadPages = this.preloadPages;
 
-    unmount() {
-        const swup = this.swup;
+		// register mouseover handler
+		if (this.options.useOnMouseOverPreload) {
+			console.log('swup.options.linkSelector: ', swup.options.linkSelector);
+			swup.delegatedListeners.mouseover = delegate(
+				document.body,
+				swup.options.linkSelector,
+				'mouseover',
+				this.onMouseover.bind(this)
+			);
+		}
 
-        swup._handlers.pagePreloaded = null;
-        swup._handlers.hoverLink = null;
+		// initial preload of page form links with [data-swup-preload]
+		swup.preloadPages();
 
-        swup.preloadPage = null;
-        swup.preloadPages = null;
+		// do the same on every content replace
+		swup.on('contentReplaced', this.onContentReplaced);
+	}
 
-        swup.delegatedListeners.mouseover.destroy();
+	unmount() {
+		const swup = this.swup;
 
-        swup.off('contentReplaced', this.onContentReplaced)
-    }
+		swup._handlers.pagePreloaded = null;
+		swup._handlers.hoverLink = null;
 
-    onContentReplaced = () => {
-        this.swup.preloadPages();
-    }
+		swup.preloadPage = null;
+		swup.preloadPages = null;
 
-    onMouseover = event => {
-        const swup = this.swup;
+		swup.delegatedListeners.mouseover.destroy();
 
-        swup.triggerEvent('hoverLink', event);
+		swup.off('contentReplaced', this.onContentReplaced);
+	}
 
-        const link = new Link(event.delegateTarget);
-        if (
-            link.getAddress() !== getCurrentUrl() &&
-            !swup.cache.exists(link.getAddress()) &&
-            swup.preloadPromise == null
-        ) {
-            swup.preloadPromise = swup.preloadPage(link.getAddress());
-            swup.preloadPromise.route = link.getAddress();
-            swup.preloadPromise
-                .finally(() => {
-                    swup.preloadPromise = null;
-                });
-        }
-    }
+	onContentReplaced = () => {
+		this.swup.preloadPages();
+	};
 
-    preloadPage = pathname => {
-        const swup = this.swup;
+	onMouseover = (event) => {
+		const swup = this.swup;
 
-        let link = new Link(pathname);
-        return new Promise((resolve, reject) => {
-            if (link.getAddress() != getCurrentUrl() && !swup.cache.exists(link.getAddress())) {
-                fetch({ url: link.getAddress(), headers: swup.options.requestHeaders }, (response) => {
-                    if (response.status === 500) {
-                        swup.triggerEvent('serverError');
-                        reject();
-                    } else {
-                        // get json data
-                        let page = swup.getPageData(response);
-                        if (page != null) {
-                            page.url = link.getAddress();
-                            swup.cache.cacheUrl(page, swup.options.debugMode);
-                            swup.triggerEvent('pagePreloaded');
-                        } else {
-                            reject(link.getAddress());
-                            return;
-                        }
-                        resolve(swup.cache.getPage(link.getAddress()));
-                    }
-                });
-            } else {
-                resolve(swup.cache.getPage(link.getAddress()));
-            }
-        });
-    };
+		swup.triggerEvent('hoverLink', event);
 
-    preloadPages = () => {
-        queryAll('[data-swup-preload]').forEach((element) => {
-            this.swup.preloadPage(element.href);
-        });
-    };
+		const link = new Link(event.delegateTarget);
+		if (
+			link.getAddress() !== getCurrentUrl() &&
+			!swup.cache.exists(link.getAddress()) &&
+			swup.preloadPromise == null
+		) {
+			swup.preloadPromise = swup.preloadPage(link.getAddress());
+			swup.preloadPromise.route = link.getAddress();
+			swup.preloadPromise.finally(() => {
+				swup.preloadPromise = null;
+			});
+		}
+	};
+
+	preloadPage = (pathname) => {
+		const swup = this.swup;
+
+		let link = new Link(pathname);
+
+		if (link.getAddress() === getCurrentUrl() || swup.cache.exists(link.getAddress())) {
+			return Promise.resolve(swup.cache.getPage(link.getAddress()));
+		}
+
+		if (this.options.useRequestIdleCallback) {
+			return new Promise((resolve, reject) => {
+				requestIdleCallback(() => {
+					this.fetchPage(link)
+						.then(resolve)
+						.catch(reject);
+				});
+			});
+		} else {
+			return this.fetchPage(link);
+		}
+	};
+
+	fetchPage = (link) => {
+		const swup = this.swup;
+
+		return new Promise((resolve, reject) => {
+			fetch(
+				{
+					url: link.getAddress(),
+					headers: swup.options.requestHeaders
+				},
+				(response) => {
+					if (response.status === 500) {
+						swup.triggerEvent('serverError');
+						reject();
+					} else {
+						// get json data
+						let page = swup.getPageData(response);
+						if (page != null) {
+							page.url = link.getAddress();
+							swup.cache.cacheUrl(page, swup.options.debugMode);
+							swup.triggerEvent('pagePreloaded');
+						} else {
+							reject(link.getAddress());
+							return;
+						}
+						resolve(swup.cache.getPage(link.getAddress()));
+					}
+				}
+			);
+		});
+	};
+
+	preloadPages = () => {
+		queryAll('[data-swup-preload]').forEach((element) => {
+			if (this.options.useRequestIdleCallback) {
+				requestIdleCallback(() => {
+					this.swup.preloadPage(element.href);
+				});
+			} else {
+				this.swup.preloadPage(element.href);
+			}
+		});
+	};
 }

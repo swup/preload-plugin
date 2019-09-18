@@ -147,8 +147,10 @@ module.exports = _index2.default; // this is here for webpack to expose SwupPlug
 
 
 Object.defineProperty(exports, "__esModule", {
-    value: true
+	value: true
 });
+
+var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
@@ -164,6 +166,8 @@ var _utils = __webpack_require__(0);
 
 var _helpers = __webpack_require__(6);
 
+__webpack_require__(15);
+
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
@@ -173,107 +177,146 @@ function _possibleConstructorReturn(self, call) { if (!self) { throw new Referen
 function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
 var PreloadPlugin = function (_Plugin) {
-    _inherits(PreloadPlugin, _Plugin);
+	_inherits(PreloadPlugin, _Plugin);
 
-    function PreloadPlugin() {
-        var _ref;
+	function PreloadPlugin() {
+		var options = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
 
-        var _temp, _this, _ret;
+		_classCallCheck(this, PreloadPlugin);
 
-        _classCallCheck(this, PreloadPlugin);
+		var _this = _possibleConstructorReturn(this, (PreloadPlugin.__proto__ || Object.getPrototypeOf(PreloadPlugin)).call(this));
 
-        for (var _len = arguments.length, args = Array(_len), _key = 0; _key < _len; _key++) {
-            args[_key] = arguments[_key];
-        }
+		_this.name = 'PreloadPlugin';
 
-        return _ret = (_temp = (_this = _possibleConstructorReturn(this, (_ref = PreloadPlugin.__proto__ || Object.getPrototypeOf(PreloadPlugin)).call.apply(_ref, [this].concat(args))), _this), _this.name = "PreloadPlugin", _this.onContentReplaced = function () {
-            _this.swup.preloadPages();
-        }, _this.onMouseover = function (event) {
-            var swup = _this.swup;
+		_this.onContentReplaced = function () {
+			_this.swup.preloadPages();
+		};
 
-            swup.triggerEvent('hoverLink', event);
+		_this.onMouseover = function (event) {
+			var swup = _this.swup;
 
-            var link = new _helpers.Link(event.delegateTarget);
-            if (link.getAddress() !== (0, _helpers.getCurrentUrl)() && !swup.cache.exists(link.getAddress()) && swup.preloadPromise == null) {
-                swup.preloadPromise = swup.preloadPage(link.getAddress());
-                swup.preloadPromise.route = link.getAddress();
-                swup.preloadPromise.finally(function () {
-                    swup.preloadPromise = null;
-                });
-            }
-        }, _this.preloadPage = function (pathname) {
-            var swup = _this.swup;
+			swup.triggerEvent('hoverLink', event);
 
-            var link = new _helpers.Link(pathname);
-            return new Promise(function (resolve, reject) {
-                if (link.getAddress() != (0, _helpers.getCurrentUrl)() && !swup.cache.exists(link.getAddress())) {
-                    (0, _helpers.fetch)({ url: link.getAddress(), headers: swup.options.requestHeaders }, function (response) {
-                        if (response.status === 500) {
-                            swup.triggerEvent('serverError');
-                            reject();
-                        } else {
-                            // get json data
-                            var page = swup.getPageData(response);
-                            if (page != null) {
-                                page.url = link.getAddress();
-                                swup.cache.cacheUrl(page, swup.options.debugMode);
-                                swup.triggerEvent('pagePreloaded');
-                            } else {
-                                reject(link.getAddress());
-                                return;
-                            }
-                            resolve(swup.cache.getPage(link.getAddress()));
-                        }
-                    });
-                } else {
-                    resolve(swup.cache.getPage(link.getAddress()));
-                }
-            });
-        }, _this.preloadPages = function () {
-            (0, _utils.queryAll)('[data-swup-preload]').forEach(function (element) {
-                _this.swup.preloadPage(element.href);
-            });
-        }, _temp), _possibleConstructorReturn(_this, _ret);
-    }
+			var link = new _helpers.Link(event.delegateTarget);
+			if (link.getAddress() !== (0, _helpers.getCurrentUrl)() && !swup.cache.exists(link.getAddress()) && swup.preloadPromise == null) {
+				swup.preloadPromise = swup.preloadPage(link.getAddress());
+				swup.preloadPromise.route = link.getAddress();
+				swup.preloadPromise.finally(function () {
+					swup.preloadPromise = null;
+				});
+			}
+		};
 
-    _createClass(PreloadPlugin, [{
-        key: 'mount',
-        value: function mount() {
-            var swup = this.swup;
+		_this.preloadPage = function (pathname) {
+			var swup = _this.swup;
 
-            swup._handlers.pagePreloaded = [];
-            swup._handlers.hoverLink = [];
+			var link = new _helpers.Link(pathname);
 
-            swup.preloadPage = this.preloadPage;
-            swup.preloadPages = this.preloadPages;
+			if (link.getAddress() === (0, _helpers.getCurrentUrl)() || swup.cache.exists(link.getAddress())) {
+				return Promise.resolve(swup.cache.getPage(link.getAddress()));
+			}
 
-            // register mouseover handler
-            swup.delegatedListeners.mouseover = (0, _delegate2.default)(document.body, swup.options.linkSelector, 'mouseover', this.onMouseover.bind(this));
+			if (_this.options.useRequestIdleCallback) {
+				return new Promise(function (resolve, reject) {
+					requestIdleCallback(function () {
+						_this.fetchPage(link).then(resolve).catch(reject);
+					});
+				});
+			} else {
+				return _this.fetchPage(link);
+			}
+		};
 
-            // initial preload of page form links with [data-swup-preload]
-            swup.preloadPages();
+		_this.fetchPage = function (link) {
+			var swup = _this.swup;
 
-            // do the same on every content replace
-            swup.on('contentReplaced', this.onContentReplaced);
-        }
-    }, {
-        key: 'unmount',
-        value: function unmount() {
-            var swup = this.swup;
+			return new Promise(function (resolve, reject) {
+				(0, _helpers.fetch)({
+					url: link.getAddress(),
+					headers: swup.options.requestHeaders
+				}, function (response) {
+					if (response.status === 500) {
+						swup.triggerEvent('serverError');
+						reject();
+					} else {
+						// get json data
+						var page = swup.getPageData(response);
+						if (page != null) {
+							page.url = link.getAddress();
+							swup.cache.cacheUrl(page, swup.options.debugMode);
+							swup.triggerEvent('pagePreloaded');
+						} else {
+							reject(link.getAddress());
+							return;
+						}
+						resolve(swup.cache.getPage(link.getAddress()));
+					}
+				});
+			});
+		};
 
-            swup._handlers.pagePreloaded = null;
-            swup._handlers.hoverLink = null;
+		_this.preloadPages = function () {
+			(0, _utils.queryAll)('[data-swup-preload]').forEach(function (element) {
+				if (_this.options.useRequestIdleCallback) {
+					requestIdleCallback(function () {
+						_this.swup.preloadPage(element.href);
+					});
+				} else {
+					_this.swup.preloadPage(element.href);
+				}
+			});
+		};
 
-            swup.preloadPage = null;
-            swup.preloadPages = null;
+		var defaultOptions = {
+			useRequestIdleCallback: true,
+			useOnMouseOverPreload: true
+		};
 
-            swup.delegatedListeners.mouseover.destroy();
+		_this.options = _extends({}, defaultOptions, options);
+		return _this;
+	}
 
-            swup.off('contentReplaced', this.onContentReplaced);
-        }
-    }]);
+	_createClass(PreloadPlugin, [{
+		key: 'mount',
+		value: function mount() {
+			var swup = this.swup;
 
-    return PreloadPlugin;
+			swup._handlers.pagePreloaded = [];
+			swup._handlers.hoverLink = [];
+
+			swup.preloadPage = this.preloadPage;
+			swup.preloadPages = this.preloadPages;
+
+			// register mouseover handler
+			if (this.options.useOnMouseOverPreload) {
+				console.log('swup.options.linkSelector: ', swup.options.linkSelector);
+				swup.delegatedListeners.mouseover = (0, _delegate2.default)(document.body, swup.options.linkSelector, 'mouseover', this.onMouseover.bind(this));
+			}
+
+			// initial preload of page form links with [data-swup-preload]
+			swup.preloadPages();
+
+			// do the same on every content replace
+			swup.on('contentReplaced', this.onContentReplaced);
+		}
+	}, {
+		key: 'unmount',
+		value: function unmount() {
+			var swup = this.swup;
+
+			swup._handlers.pagePreloaded = null;
+			swup._handlers.hoverLink = null;
+
+			swup.preloadPage = null;
+			swup.preloadPages = null;
+
+			swup.delegatedListeners.mouseover.destroy();
+
+			swup.off('contentReplaced', this.onContentReplaced);
+		}
+	}]);
+
+	return PreloadPlugin;
 }(_plugin2.default);
 
 exports.default = PreloadPlugin;
@@ -800,6 +843,251 @@ var Link = function () {
 }();
 
 exports.default = Link;
+
+/***/ }),
+/* 15 */
+/***/ (function(module, exports, __webpack_require__) {
+
+/* WEBPACK VAR INJECTION */(function(global) {var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;(function (factory) {
+	if (true) {
+		!(__WEBPACK_AMD_DEFINE_ARRAY__ = [], __WEBPACK_AMD_DEFINE_FACTORY__ = (factory),
+				__WEBPACK_AMD_DEFINE_RESULT__ = (typeof __WEBPACK_AMD_DEFINE_FACTORY__ === 'function' ?
+				(__WEBPACK_AMD_DEFINE_FACTORY__.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__)) : __WEBPACK_AMD_DEFINE_FACTORY__),
+				__WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
+	} else {}
+}(function(){
+	'use strict';
+	var scheduleStart, throttleDelay, lazytimer, lazyraf;
+	var root = typeof window != 'undefined' ?
+		window :
+		typeof global != undefined ?
+			global :
+			this || {};
+	var requestAnimationFrame = root.cancelRequestAnimationFrame && root.requestAnimationFrame || setTimeout;
+	var cancelRequestAnimationFrame = root.cancelRequestAnimationFrame || clearTimeout;
+	var tasks = [];
+	var runAttempts = 0;
+	var isRunning = false;
+	var remainingTime = 7;
+	var minThrottle = 35;
+	var throttle = 125;
+	var index = 0;
+	var taskStart = 0;
+	var tasklength = 0;
+	var IdleDeadline = {
+		get didTimeout(){
+			return false;
+		},
+		timeRemaining: function(){
+			var timeRemaining = remainingTime - (Date.now() - taskStart);
+			return timeRemaining < 0 ? 0 : timeRemaining;
+		},
+	};
+	var setInactive = debounce(function(){
+		remainingTime = 22;
+		throttle = 66;
+		minThrottle = 0;
+	});
+
+	function debounce(fn){
+		var id, timestamp;
+		var wait = 99;
+		var check = function(){
+			var last = (Date.now()) - timestamp;
+
+			if (last < wait) {
+				id = setTimeout(check, wait - last);
+			} else {
+				id = null;
+				fn();
+			}
+		};
+		return function(){
+			timestamp = Date.now();
+			if(!id){
+				id = setTimeout(check, wait);
+			}
+		};
+	}
+
+	function abortRunning(){
+		if(isRunning){
+			if(lazyraf){
+				cancelRequestAnimationFrame(lazyraf);
+			}
+			if(lazytimer){
+				clearTimeout(lazytimer);
+			}
+			isRunning = false;
+		}
+	}
+
+	function onInputorMutation(){
+		if(throttle != 125){
+			remainingTime = 7;
+			throttle = 125;
+			minThrottle = 35;
+
+			if(isRunning) {
+				abortRunning();
+				scheduleLazy();
+			}
+		}
+		setInactive();
+	}
+
+	function scheduleAfterRaf() {
+		lazyraf = null;
+		lazytimer = setTimeout(runTasks, 0);
+	}
+
+	function scheduleRaf(){
+		lazytimer = null;
+		requestAnimationFrame(scheduleAfterRaf);
+	}
+
+	function scheduleLazy(){
+
+		if(isRunning){return;}
+		throttleDelay = throttle - (Date.now() - taskStart);
+
+		scheduleStart = Date.now();
+
+		isRunning = true;
+
+		if(minThrottle && throttleDelay < minThrottle){
+			throttleDelay = minThrottle;
+		}
+
+		if(throttleDelay > 9){
+			lazytimer = setTimeout(scheduleRaf, throttleDelay);
+		} else {
+			throttleDelay = 0;
+			scheduleRaf();
+		}
+	}
+
+	function runTasks(){
+		var task, i, len;
+		var timeThreshold = remainingTime > 9 ?
+			9 :
+			1
+		;
+
+		taskStart = Date.now();
+		isRunning = false;
+
+		lazytimer = null;
+
+		if(runAttempts > 2 || taskStart - throttleDelay - 50 < scheduleStart){
+			for(i = 0, len = tasks.length; i < len && IdleDeadline.timeRemaining() > timeThreshold; i++){
+				task = tasks.shift();
+				tasklength++;
+				if(task){
+					task(IdleDeadline);
+				}
+			}
+		}
+
+		if(tasks.length){
+			scheduleLazy();
+		} else {
+			runAttempts = 0;
+		}
+	}
+
+	function requestIdleCallbackShim(task){
+		index++;
+		tasks.push(task);
+		scheduleLazy();
+		return index;
+	}
+
+	function cancelIdleCallbackShim(id){
+		var index = id - 1 - tasklength;
+		if(tasks[index]){
+			tasks[index] = null;
+		}
+	}
+
+	if(!root.requestIdleCallback || !root.cancelIdleCallback){
+		root.requestIdleCallback = requestIdleCallbackShim;
+		root.cancelIdleCallback = cancelIdleCallbackShim;
+
+		if(root.document && document.addEventListener){
+			root.addEventListener('scroll', onInputorMutation, true);
+			root.addEventListener('resize', onInputorMutation);
+
+			document.addEventListener('focus', onInputorMutation, true);
+			document.addEventListener('mouseover', onInputorMutation, true);
+			['click', 'keypress', 'touchstart', 'mousedown'].forEach(function(name){
+				document.addEventListener(name, onInputorMutation, {capture: true, passive: true});
+			});
+
+			if(root.MutationObserver){
+				new MutationObserver( onInputorMutation ).observe( document.documentElement, {childList: true, subtree: true, attributes: true} );
+			}
+		}
+	} else {
+		try{
+			root.requestIdleCallback(function(){}, {timeout: 0});
+		} catch(e){
+			(function(rIC){
+				var timeRemainingProto, timeRemaining;
+				root.requestIdleCallback = function(fn, timeout){
+					if(timeout && typeof timeout.timeout == 'number'){
+						return rIC(fn, timeout.timeout);
+					}
+					return rIC(fn);
+				};
+				if(root.IdleCallbackDeadline && (timeRemainingProto = IdleCallbackDeadline.prototype)){
+					timeRemaining = Object.getOwnPropertyDescriptor(timeRemainingProto, 'timeRemaining');
+					if(!timeRemaining || !timeRemaining.configurable || !timeRemaining.get){return;}
+					Object.defineProperty(timeRemainingProto, 'timeRemaining', {
+						value:  function(){
+							return timeRemaining.get.call(this);
+						},
+						enumerable: true,
+						configurable: true,
+					});
+				}
+			})(root.requestIdleCallback)
+		}
+	}
+
+	return {
+		request: requestIdleCallbackShim,
+		cancel: cancelIdleCallbackShim,
+	};
+}));
+
+/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(16)))
+
+/***/ }),
+/* 16 */
+/***/ (function(module, exports) {
+
+var g;
+
+// This works in non-strict mode
+g = (function() {
+	return this;
+})();
+
+try {
+	// This works if eval is allowed (see CSP)
+	g = g || new Function("return this")();
+} catch (e) {
+	// This works if the window reference is available
+	if (typeof window === "object") g = window;
+}
+
+// g can still be undefined, but nothing to do about it...
+// We return undefined, instead of nothing here, so it's
+// easier to handle this case. if(!global) { ...}
+
+module.exports = g;
+
 
 /***/ })
 /******/ ]);
