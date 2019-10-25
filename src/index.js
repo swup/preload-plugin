@@ -33,7 +33,6 @@ export default class PreloadPlugin extends Plugin {
 
 		// register mouseover handler
 		if (this.options.useOnMouseOverPreload) {
-			console.log('swup.options.linkSelector: ', swup.options.linkSelector);
 			swup.delegatedListeners.mouseover = delegate(
 				document.body,
 				swup.options.linkSelector,
