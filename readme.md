@@ -1,9 +1,11 @@
 # Swup Preload plugin
-Plugin adds preload functionality. Firstly, any link element found in DOM with the `[data-swup-preload]` attribute is automatically preloaded. 
-Swup also tries to speed up the process of loading by starting the preload on hover over the link. 
-In case one request is already running for preload from hover, swup won't start another request, to prevent unnecessary overloading of server. 
+
+Plugin adds preload functionality. Firstly, any link element found in DOM with the `[data-swup-preload]` attribute is automatically preloaded.
+Swup also tries to speed up the process of loading by starting the preload on hover over the link.
+In case one request is already running for preload from hover, swup won't start another request, to prevent unnecessary overloading of server.
 
 ## Instalation
+
 This plugin can be installed with npm
 
 ```bash
@@ -32,9 +34,29 @@ const swup = new Swup({
 });
 ```
 
-## Changes of swup instance
-Plugin adds two methods to the swup instance - `preloadPage` and `preloadPages`.
-`preloadPage` accepts URL path and returns a promise describing loading of the page. 
-`preloadPages` scans DOM for links with `[data-swup-preload]` attribute and calls `preloadPage` for each URL. 
+## Options
 
-Plugin also adds `pagePreloaded` and `hoverLink` events to swup, that can be listened to with `on` method. 
+The following options are enabled by default:
+
+- `useRequestIdleCallback`
+- `useOnMouseOverPreload`
+
+If you want to disable one of them, do as follows:
+
+```javascript
+const swup = new Swup({
+  plugins: [
+    new SwupPreloadPlugin({
+      useRequestIdleCallback: true
+    })
+  ]
+});
+```
+
+## Changes of swup instance
+
+Plugin adds two methods to the swup instance - `preloadPage` and `preloadPages`.
+`preloadPage` accepts URL path and returns a promise describing loading of the page.
+`preloadPages` scans DOM for links with `[data-swup-preload]` attribute and calls `preloadPage` for each URL.
+
+Plugin also adds `pagePreloaded` and `hoverLink` events to swup, that can be listened to with `on` method.
