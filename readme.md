@@ -3,7 +3,7 @@ Plugin adds preload functionality. Firstly, any link element found in DOM with t
 Swup also tries to speed up the process of loading by starting the preload on hover over the link. 
 In case one request is already running for preload from hover, swup won't start another request, to prevent unnecessary overloading of server. 
 
-## Instalation
+## Installation
 This plugin can be installed with npm
 
 ```bash
