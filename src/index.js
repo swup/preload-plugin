@@ -77,7 +77,7 @@ export default class PreloadPlugin extends Plugin {
                 fetch({ url: link.getAddress(), headers: swup.options.requestHeaders }, (response) => {
                     if (response.status === 500) {
                         swup.triggerEvent('serverError');
-                        reject();
+                        reject(link.getAddress());
                     } else {
                         // get json data
                         let page = swup.getPageData(response);
