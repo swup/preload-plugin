@@ -156,13 +156,13 @@ var _plugin = __webpack_require__(3);
 
 var _plugin2 = _interopRequireDefault(_plugin);
 
-var _delegate = __webpack_require__(4);
+var _delegateIt = __webpack_require__(4);
 
-var _delegate2 = _interopRequireDefault(_delegate);
+var _delegateIt2 = _interopRequireDefault(_delegateIt);
 
 var _utils = __webpack_require__(0);
 
-var _helpers = __webpack_require__(6);
+var _helpers = __webpack_require__(5);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -248,7 +248,7 @@ var PreloadPlugin = function (_Plugin) {
             swup.preloadPages = this.preloadPages;
 
             // register mouseover handler
-            swup.delegatedListeners.mouseover = (0, _delegate2.default)(document.body, swup.options.linkSelector, 'mouseover', this.onMouseover.bind(this));
+            swup.delegatedListeners.mouseover = (0, _delegateIt2.default)(document.body, swup.options.linkSelector, 'mouseover', this.onMouseover.bind(this));
 
             // initial preload of page form links with [data-swup-preload]
             swup.preloadPages();
@@ -334,129 +334,99 @@ exports.default = Plugin;
 
 /***/ }),
 /* 4 */
-/***/ (function(module, exports, __webpack_require__) {
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
 
-var closest = __webpack_require__(5);
-
-/**
- * Delegates event to a selector.
- *
- * @param {Element} element
- * @param {String} selector
- * @param {String} type
- * @param {Function} callback
- * @param {Boolean} useCapture
- * @return {Object}
- */
-function _delegate(element, selector, type, callback, useCapture) {
-    var listenerFn = listener.apply(this, arguments);
-
-    element.addEventListener(type, listenerFn, useCapture);
-
-    return {
-        destroy: function() {
-            element.removeEventListener(type, listenerFn, useCapture);
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/** Keeps track of raw listeners added to the base elements to avoid duplication */
+const ledger = new WeakMap();
+function editLedger(wanted, baseElement, callback, setup) {
+    var _a, _b;
+    if (!wanted && !ledger.has(baseElement)) {
+        return false;
+    }
+    const elementMap = (_a = ledger.get(baseElement)) !== null && _a !== void 0 ? _a : new WeakMap();
+    ledger.set(baseElement, elementMap);
+    if (!wanted && !ledger.has(baseElement)) {
+        return false;
+    }
+    const setups = (_b = elementMap.get(callback)) !== null && _b !== void 0 ? _b : new Set();
+    elementMap.set(callback, setups);
+    const existed = setups.has(setup);
+    if (wanted) {
+        setups.add(setup);
+    }
+    else {
+        setups.delete(setup);
+    }
+    return existed && wanted;
+}
+function isEventTarget(elements) {
+    return typeof elements.addEventListener === 'function';
+}
+function safeClosest(event, selector) {
+    let target = event.target;
+    if (target instanceof Text) {
+        target = target.parentElement;
+    }
+    if (target instanceof Element && event.currentTarget instanceof Element) {
+        // `.closest()` may match ancestors of `currentTarget` but we only need its children
+        const closest = target.closest(selector);
+        if (closest && event.currentTarget.contains(closest)) {
+            return closest;
         }
     }
 }
-
-/**
- * Delegates event to a selector.
- *
- * @param {Element|String|Array} [elements]
- * @param {String} selector
- * @param {String} type
- * @param {Function} callback
- * @param {Boolean} useCapture
- * @return {Object}
- */
-function delegate(elements, selector, type, callback, useCapture) {
-    // Handle the regular Element usage
-    if (typeof elements.addEventListener === 'function') {
-        return _delegate.apply(null, arguments);
-    }
-
-    // Handle Element-less usage, it defaults to global delegation
-    if (typeof type === 'function') {
-        // Use `document` as the first parameter, then apply arguments
-        // This is a short way to .unshift `arguments` without running into deoptimizations
-        return _delegate.bind(null, document).apply(null, arguments);
-    }
-
+// This type isn't exported as a declaration, so it needs to be duplicated above
+function delegate(base, selector, type, callback, options) {
     // Handle Selector-based usage
-    if (typeof elements === 'string') {
-        elements = document.querySelectorAll(elements);
+    if (typeof base === 'string') {
+        base = document.querySelectorAll(base);
     }
-
     // Handle Array-like based usage
-    return Array.prototype.map.call(elements, function (element) {
-        return _delegate(element, selector, type, callback, useCapture);
-    });
-}
-
-/**
- * Finds closest match and invokes callback.
- *
- * @param {Element} element
- * @param {String} selector
- * @param {String} type
- * @param {Function} callback
- * @return {Function}
- */
-function listener(element, selector, type, callback) {
-    return function(e) {
-        e.delegateTarget = closest(e.target, selector);
-
-        if (e.delegateTarget) {
-            callback.call(element, e);
-        }
+    if (!isEventTarget(base)) {
+        const subscriptions = Array.prototype.map.call(base, (element) => delegate(element, selector, type, callback, options));
+        return {
+            destroy() {
+                for (const subscription of subscriptions) {
+                    subscription.destroy();
+                }
+            },
+        };
     }
+    // `document` should never be the base, it's just an easy way to define "global event listeners"
+    const baseElement = base instanceof Document ? base.documentElement : base;
+    // Handle the regular Element usage
+    const capture = Boolean(typeof options === 'object' ? options.capture : options);
+    const listenerFn = (event) => {
+        const delegateTarget = safeClosest(event, selector);
+        if (delegateTarget) {
+            event.delegateTarget = delegateTarget;
+            callback.call(baseElement, event);
+        }
+    };
+    // Drop unsupported `once` option https://github.com/fregante/delegate-it/pull/28#discussion_r863467939
+    if (typeof options === 'object') {
+        delete options.once;
+    }
+    const setup = JSON.stringify({ selector, type, capture });
+    const isAlreadyListening = editLedger(true, baseElement, callback, setup);
+    const delegateSubscription = {
+        destroy() {
+            baseElement.removeEventListener(type, listenerFn, options);
+            editLedger(false, baseElement, callback, setup);
+        },
+    };
+    if (!isAlreadyListening) {
+        baseElement.addEventListener(type, listenerFn, options);
+    }
+    return delegateSubscription;
 }
-
-module.exports = delegate;
+/* harmony default export */ __webpack_exports__["default"] = (delegate);
 
 
 /***/ }),
 /* 5 */
-/***/ (function(module, exports) {
-
-var DOCUMENT_NODE_TYPE = 9;
-
-/**
- * A polyfill for Element.matches()
- */
-if (typeof Element !== 'undefined' && !Element.prototype.matches) {
-    var proto = Element.prototype;
-
-    proto.matches = proto.matchesSelector ||
-                    proto.mozMatchesSelector ||
-                    proto.msMatchesSelector ||
-                    proto.oMatchesSelector ||
-                    proto.webkitMatchesSelector;
-}
-
-/**
- * Finds the closest parent that matches a selector.
- *
- * @param {Element} element
- * @param {String} selector
- * @return {Function}
- */
-function closest (element, selector) {
-    while (element && element.nodeType !== DOCUMENT_NODE_TYPE) {
-        if (typeof element.matches === 'function' &&
-            element.matches(selector)) {
-          return element;
-        }
-        element = element.parentNode;
-    }
-}
-
-module.exports = closest;
-
-
-/***/ }),
-/* 6 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -467,35 +437,35 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.Link = exports.markSwupElements = exports.getCurrentUrl = exports.transitionEnd = exports.fetch = exports.getDataFromHTML = exports.createHistoryRecord = exports.classify = undefined;
 
-var _classify = __webpack_require__(7);
+var _classify = __webpack_require__(6);
 
 var _classify2 = _interopRequireDefault(_classify);
 
-var _createHistoryRecord = __webpack_require__(8);
+var _createHistoryRecord = __webpack_require__(7);
 
 var _createHistoryRecord2 = _interopRequireDefault(_createHistoryRecord);
 
-var _getDataFromHTML = __webpack_require__(9);
+var _getDataFromHTML = __webpack_require__(8);
 
 var _getDataFromHTML2 = _interopRequireDefault(_getDataFromHTML);
 
-var _fetch = __webpack_require__(10);
+var _fetch = __webpack_require__(9);
 
 var _fetch2 = _interopRequireDefault(_fetch);
 
-var _transitionEnd = __webpack_require__(11);
+var _transitionEnd = __webpack_require__(10);
 
 var _transitionEnd2 = _interopRequireDefault(_transitionEnd);
 
-var _getCurrentUrl = __webpack_require__(12);
+var _getCurrentUrl = __webpack_require__(11);
 
 var _getCurrentUrl2 = _interopRequireDefault(_getCurrentUrl);
 
-var _markSwupElements = __webpack_require__(13);
+var _markSwupElements = __webpack_require__(12);
 
 var _markSwupElements2 = _interopRequireDefault(_markSwupElements);
 
-var _Link = __webpack_require__(14);
+var _Link = __webpack_require__(13);
 
 var _Link2 = _interopRequireDefault(_Link);
 
@@ -511,7 +481,7 @@ var markSwupElements = exports.markSwupElements = _markSwupElements2.default;
 var Link = exports.Link = _Link2.default;
 
 /***/ }),
-/* 7 */
+/* 6 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -535,7 +505,7 @@ var classify = function classify(text) {
 exports.default = classify;
 
 /***/ }),
-/* 8 */
+/* 7 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -555,7 +525,7 @@ var createHistoryRecord = function createHistoryRecord(url) {
 exports.default = createHistoryRecord;
 
 /***/ }),
-/* 9 */
+/* 8 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -612,7 +582,7 @@ var getDataFromHTML = function getDataFromHTML(html, containers) {
 exports.default = getDataFromHTML;
 
 /***/ }),
-/* 10 */
+/* 9 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -659,7 +629,7 @@ var fetch = function fetch(setOptions) {
 exports.default = fetch;
 
 /***/ }),
-/* 11 */
+/* 10 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -690,7 +660,7 @@ var transitionEnd = function transitionEnd() {
 exports.default = transitionEnd;
 
 /***/ }),
-/* 12 */
+/* 11 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -706,7 +676,7 @@ var getCurrentUrl = function getCurrentUrl() {
 exports.default = getCurrentUrl;
 
 /***/ }),
-/* 13 */
+/* 12 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -740,7 +710,7 @@ var markSwupElements = function markSwupElements(element, containers) {
 exports.default = markSwupElements;
 
 /***/ }),
-/* 14 */
+/* 13 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
