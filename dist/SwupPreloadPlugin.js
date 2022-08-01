@@ -210,7 +210,7 @@ var PreloadPlugin = function (_Plugin) {
                     (0, _helpers.fetch)({ url: link.getAddress(), headers: swup.options.requestHeaders }, function (response) {
                         if (response.status === 500) {
                             swup.triggerEvent('serverError');
-                            reject();
+                            reject(link.getAddress());
                         } else {
                             // get json data
                             var page = swup.getPageData(response);
