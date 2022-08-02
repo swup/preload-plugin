@@ -91,7 +91,7 @@ return /******/ (function(modules) { // webpackBootstrap
 /******/
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = 1);
+/******/ 	return __webpack_require__(__webpack_require__.s = 2);
 /******/ })
 /************************************************************************/
 /******/ ([
@@ -124,6 +124,14 @@ var queryAll = exports.queryAll = function queryAll(selector) {
 	return Array.prototype.slice.call(context.querySelectorAll(selector));
 };
 
+var escapeCssIdentifier = exports.escapeCssIdentifier = function escapeCssIdentifier(ident) {
+	if (window.CSS && window.CSS.escape) {
+		return CSS.escape(ident);
+	} else {
+		return ident;
+	}
+};
+
 /***/ }),
 /* 1 */
 /***/ (function(module, exports, __webpack_require__) {
@@ -131,7 +139,69 @@ var queryAll = exports.queryAll = function queryAll(selector) {
 "use strict";
 
 
-var _index = __webpack_require__(2);
+Object.defineProperty(exports, "__esModule", {
+	value: true
+});
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+var Link = function () {
+	function Link(elementOrUrl) {
+		_classCallCheck(this, Link);
+
+		if (elementOrUrl instanceof Element || elementOrUrl instanceof SVGElement) {
+			this.link = elementOrUrl;
+		} else {
+			this.link = document.createElement('a');
+			this.link.href = elementOrUrl;
+		}
+	}
+
+	_createClass(Link, [{
+		key: 'getPath',
+		value: function getPath() {
+			var path = this.link.pathname;
+			if (path[0] !== '/') {
+				path = '/' + path;
+			}
+			return path;
+		}
+	}, {
+		key: 'getAddress',
+		value: function getAddress() {
+			var path = this.link.pathname + this.link.search;
+
+			if (this.link.getAttribute('xlink:href')) {
+				path = this.link.getAttribute('xlink:href');
+			}
+
+			if (path[0] !== '/') {
+				path = '/' + path;
+			}
+			return path;
+		}
+	}, {
+		key: 'getHash',
+		value: function getHash() {
+			return this.link.hash;
+		}
+	}]);
+
+	return Link;
+}();
+
+exports.default = Link;
+
+/***/ }),
+/* 2 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+var _index = __webpack_require__(3);
 
 var _index2 = _interopRequireDefault(_index);
 
@@ -140,7 +210,7 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 module.exports = _index2.default; // this is here for webpack to expose SwupPlugin as window.SwupPlugin
 
 /***/ }),
-/* 2 */
+/* 3 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -152,17 +222,17 @@ Object.defineProperty(exports, "__esModule", {
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
-var _plugin = __webpack_require__(3);
+var _plugin = __webpack_require__(4);
 
 var _plugin2 = _interopRequireDefault(_plugin);
 
-var _delegateIt = __webpack_require__(4);
+var _delegateIt = __webpack_require__(5);
 
 var _delegateIt2 = _interopRequireDefault(_delegateIt);
 
 var _utils = __webpack_require__(0);
 
-var _helpers = __webpack_require__(5);
+var _helpers = __webpack_require__(6);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -279,7 +349,7 @@ var PreloadPlugin = function (_Plugin) {
 exports.default = PreloadPlugin;
 
 /***/ }),
-/* 3 */
+/* 4 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -333,7 +403,7 @@ var Plugin = function () {
 exports.default = Plugin;
 
 /***/ }),
-/* 4 */
+/* 5 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -426,7 +496,7 @@ function delegate(base, selector, type, callback, options) {
 
 
 /***/ }),
-/* 5 */
+/* 6 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -435,37 +505,45 @@ function delegate(base, selector, type, callback, options) {
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.Link = exports.markSwupElements = exports.getCurrentUrl = exports.transitionEnd = exports.fetch = exports.getDataFromHTML = exports.createHistoryRecord = exports.classify = undefined;
+exports.Link = exports.markSwupElements = exports.normalizeUrl = exports.getCurrentUrl = exports.transitionProperty = exports.transitionEnd = exports.fetch = exports.getDataFromHtml = exports.createHistoryRecord = exports.classify = undefined;
 
-var _classify = __webpack_require__(6);
+var _classify = __webpack_require__(7);
 
 var _classify2 = _interopRequireDefault(_classify);
 
-var _createHistoryRecord = __webpack_require__(7);
+var _createHistoryRecord = __webpack_require__(8);
 
 var _createHistoryRecord2 = _interopRequireDefault(_createHistoryRecord);
 
-var _getDataFromHTML = __webpack_require__(8);
+var _getDataFromHtml = __webpack_require__(9);
 
-var _getDataFromHTML2 = _interopRequireDefault(_getDataFromHTML);
+var _getDataFromHtml2 = _interopRequireDefault(_getDataFromHtml);
 
-var _fetch = __webpack_require__(9);
+var _fetch = __webpack_require__(10);
 
 var _fetch2 = _interopRequireDefault(_fetch);
 
-var _transitionEnd = __webpack_require__(10);
+var _transitionEnd = __webpack_require__(11);
 
 var _transitionEnd2 = _interopRequireDefault(_transitionEnd);
 
-var _getCurrentUrl = __webpack_require__(11);
+var _transitionProperty = __webpack_require__(12);
+
+var _transitionProperty2 = _interopRequireDefault(_transitionProperty);
+
+var _getCurrentUrl = __webpack_require__(13);
 
 var _getCurrentUrl2 = _interopRequireDefault(_getCurrentUrl);
 
-var _markSwupElements = __webpack_require__(12);
+var _normalizeUrl = __webpack_require__(14);
+
+var _normalizeUrl2 = _interopRequireDefault(_normalizeUrl);
+
+var _markSwupElements = __webpack_require__(15);
 
 var _markSwupElements2 = _interopRequireDefault(_markSwupElements);
 
-var _Link = __webpack_require__(13);
+var _Link = __webpack_require__(1);
 
 var _Link2 = _interopRequireDefault(_Link);
 
@@ -473,15 +551,17 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 
 var classify = exports.classify = _classify2.default;
 var createHistoryRecord = exports.createHistoryRecord = _createHistoryRecord2.default;
-var getDataFromHTML = exports.getDataFromHTML = _getDataFromHTML2.default;
+var getDataFromHtml = exports.getDataFromHtml = _getDataFromHtml2.default;
 var fetch = exports.fetch = _fetch2.default;
 var transitionEnd = exports.transitionEnd = _transitionEnd2.default;
+var transitionProperty = exports.transitionProperty = _transitionProperty2.default;
 var getCurrentUrl = exports.getCurrentUrl = _getCurrentUrl2.default;
+var normalizeUrl = exports.normalizeUrl = _normalizeUrl2.default;
 var markSwupElements = exports.markSwupElements = _markSwupElements2.default;
 var Link = exports.Link = _Link2.default;
 
 /***/ }),
-/* 6 */
+/* 7 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -505,7 +585,7 @@ var classify = function classify(text) {
 exports.default = classify;
 
 /***/ }),
-/* 7 */
+/* 8 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -525,7 +605,7 @@ var createHistoryRecord = function createHistoryRecord(url) {
 exports.default = createHistoryRecord;
 
 /***/ }),
-/* 8 */
+/* 9 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -535,39 +615,31 @@ Object.defineProperty(exports, "__esModule", {
 	value: true
 });
 
-var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
-
 var _utils = __webpack_require__(0);
 
-var getDataFromHTML = function getDataFromHTML(html, containers) {
-	var content = html.replace('<body', '<div id="swupBody"').replace('</body>', '</div>');
-	var fakeDom = document.createElement('div');
-	fakeDom.innerHTML = content;
+var getDataFromHtml = function getDataFromHtml(html, containers) {
+	var fakeDom = document.createElement('html');
+	fakeDom.innerHTML = html;
 	var blocks = [];
 
-	var _loop = function _loop(i) {
-		if (fakeDom.querySelector(containers[i]) == null) {
-			// page in invalid
-			return {
-				v: null
-			};
+	containers.forEach(function (selector) {
+		if ((0, _utils.query)(selector, fakeDom) == null) {
+			console.error('Container ' + selector + ' not found on page.');
+			return null;
 		} else {
-			(0, _utils.queryAll)(containers[i]).forEach(function (item, index) {
-				(0, _utils.queryAll)(containers[i], fakeDom)[index].dataset.swup = blocks.length; // marks element with data-swup
-				blocks.push((0, _utils.queryAll)(containers[i], fakeDom)[index].outerHTML);
+			if ((0, _utils.queryAll)(selector).length !== (0, _utils.queryAll)(selector, fakeDom).length) {
+				console.warn('Mismatched number of containers found on new page.');
+			}
+			(0, _utils.queryAll)(selector).forEach(function (item, index) {
+				(0, _utils.queryAll)(selector, fakeDom)[index].setAttribute('data-swup', blocks.length);
+				blocks.push((0, _utils.queryAll)(selector, fakeDom)[index].outerHTML);
 			});
 		}
-	};
-
-	for (var i = 0; i < containers.length; i++) {
-		var _ret = _loop(i);
-
-		if ((typeof _ret === 'undefined' ? 'undefined' : _typeof(_ret)) === "object") return _ret.v;
-	}
+	});
 
 	var json = {
 		title: fakeDom.querySelector('title').innerText,
-		pageClass: fakeDom.querySelector('#swupBody').className,
+		pageClass: fakeDom.querySelector('body').className,
 		originalContent: html,
 		blocks: blocks
 	};
@@ -579,10 +651,10 @@ var getDataFromHTML = function getDataFromHTML(html, containers) {
 	return json;
 };
 
-exports.default = getDataFromHTML;
+exports.default = getDataFromHtml;
 
 /***/ }),
-/* 9 */
+/* 10 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -629,7 +701,7 @@ var fetch = function fetch(setOptions) {
 exports.default = fetch;
 
 /***/ }),
-/* 10 */
+/* 11 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -639,28 +711,37 @@ Object.defineProperty(exports, "__esModule", {
 	value: true
 });
 var transitionEnd = function transitionEnd() {
-	var el = document.createElement('div');
-
-	var transEndEventNames = {
-		WebkitTransition: 'webkitTransitionEnd',
-		MozTransition: 'transitionend',
-		OTransition: 'oTransitionEnd otransitionend',
-		transition: 'transitionend'
-	};
-
-	for (var name in transEndEventNames) {
-		if (el.style[name] !== undefined) {
-			return transEndEventNames[name];
-		}
+	if (window.ontransitionend === undefined && window.onwebkittransitionend !== undefined) {
+		return 'webkitTransitionEnd';
+	} else {
+		return 'transitionend';
 	}
-
-	return false;
 };
 
 exports.default = transitionEnd;
 
 /***/ }),
-/* 11 */
+/* 12 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+	value: true
+});
+var transitionProperty = function transitionProperty() {
+	if (window.ontransitionend === undefined && window.onwebkittransitionend !== undefined) {
+		return 'WebkitTransition';
+	} else {
+		return 'transition';
+	}
+};
+
+exports.default = transitionProperty;
+
+/***/ }),
+/* 13 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -676,7 +757,30 @@ var getCurrentUrl = function getCurrentUrl() {
 exports.default = getCurrentUrl;
 
 /***/ }),
-/* 12 */
+/* 14 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+	value: true
+});
+
+var _Link = __webpack_require__(1);
+
+var _Link2 = _interopRequireDefault(_Link);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+var normalizeUrl = function normalizeUrl(url) {
+	return new _Link2.default(url).getAddress();
+};
+
+exports.default = normalizeUrl;
+
+/***/ }),
+/* 15 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -691,85 +795,19 @@ var _utils = __webpack_require__(0);
 var markSwupElements = function markSwupElements(element, containers) {
 	var blocks = 0;
 
-	var _loop = function _loop(i) {
-		if (element.querySelector(containers[i]) == null) {
-			console.warn('Element ' + containers[i] + ' is not in current page.');
+	containers.forEach(function (selector) {
+		if ((0, _utils.query)(selector, element) == null) {
+			console.error('Container ' + selector + ' not found on page.');
 		} else {
-			(0, _utils.queryAll)(containers[i]).forEach(function (item, index) {
-				(0, _utils.queryAll)(containers[i], element)[index].dataset.swup = blocks;
+			(0, _utils.queryAll)(selector).forEach(function (item, index) {
+				(0, _utils.queryAll)(selector, element)[index].setAttribute('data-swup', blocks);
 				blocks++;
 			});
 		}
-	};
-
-	for (var i = 0; i < containers.length; i++) {
-		_loop(i);
-	}
+	});
 };
 
 exports.default = markSwupElements;
-
-/***/ }),
-/* 13 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-Object.defineProperty(exports, "__esModule", {
-	value: true
-});
-
-var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
-
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-var Link = function () {
-	function Link(elementOrUrl) {
-		_classCallCheck(this, Link);
-
-		if (elementOrUrl instanceof Element || elementOrUrl instanceof SVGElement) {
-			this.link = elementOrUrl;
-		} else {
-			this.link = document.createElement('a');
-			this.link.href = elementOrUrl;
-		}
-	}
-
-	_createClass(Link, [{
-		key: 'getPath',
-		value: function getPath() {
-			var path = this.link.pathname;
-			if (path[0] !== '/') {
-				path = '/' + path;
-			}
-			return path;
-		}
-	}, {
-		key: 'getAddress',
-		value: function getAddress() {
-			var path = this.link.pathname + this.link.search;
-
-			if (this.link.getAttribute('xlink:href')) {
-				path = this.link.getAttribute('xlink:href');
-			}
-
-			if (path[0] !== '/') {
-				path = '/' + path;
-			}
-			return path;
-		}
-	}, {
-		key: 'getHash',
-		value: function getHash() {
-			return this.link.hash;
-		}
-	}]);
-
-	return Link;
-}();
-
-exports.default = Link;
 
 /***/ })
 /******/ ]);
