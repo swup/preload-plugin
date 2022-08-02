@@ -33,6 +33,6 @@
   "dependencies": {
     "@swup/plugin": "^1.0.0",
     "delegate-it": "^3.0.1",
-    "swup": "^2.0.0"
+    "swup": "^2.0.17"
   }
 }
