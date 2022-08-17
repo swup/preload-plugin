@@ -85,7 +85,7 @@ export default class PreloadPlugin extends Plugin {
 
         let link = new Link(pathname);
         return new Promise((resolve, reject) => {
-            if (link.getAddress() != getCurrentUrl() && !swup.cache.exists(link.getAddress())) {
+            if (!swup.cache.exists(link.getAddress())) {
                 fetch({ url: link.getAddress(), headers: swup.options.requestHeaders }, (response) => {
                     if (response.status === 500) {
                         swup.triggerEvent('serverError');
