@@ -9,6 +9,11 @@ export default class PreloadPlugin extends Plugin {
     mount() {
         const swup = this.swup;
 
+        if (!swup.options.cache) {
+            console.warn('PreloadPlugin: swup cache needs to be enabled for preloading');
+            return;
+        }
+
         swup._handlers.pagePreloaded = [];
         swup._handlers.hoverLink = [];
 
@@ -35,6 +40,10 @@ export default class PreloadPlugin extends Plugin {
 
     unmount() {
         const swup = this.swup;
+
+        if (!swup.options.cache) {
+            return;
+        }
 
         swup._handlers.pagePreloaded = null;
         swup._handlers.hoverLink = null;
