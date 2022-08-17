@@ -23,14 +23,11 @@ export default class PreloadPlugin extends Plugin {
             this.onMouseover.bind(this)
         );
 
-        // initial preload of links with [data-swup-preload] attr
+        // initial preload of page form links with [data-swup-preload]
         swup.preloadPages();
 
         // do the same on every content replace
         swup.on('contentReplaced', this.onContentReplaced)
-
-        // cache unmodified dom of initial/current page
-        swup.preloadPage(swup.getCurrentUrl());
     }
 
     unmount() {

@@ -320,14 +320,11 @@ var PreloadPlugin = function (_Plugin) {
             // register mouseover handler
             swup.delegatedListeners.mouseover = (0, _delegateIt2.default)(document.body, swup.options.linkSelector, 'mouseover', this.onMouseover.bind(this));
 
-            // initial preload of links with [data-swup-preload] attr
+            // initial preload of page form links with [data-swup-preload]
             swup.preloadPages();
 
             // do the same on every content replace
             swup.on('contentReplaced', this.onContentReplaced);
-
-            // cache unmodified dom of initial/current page
-            swup.preloadPage(swup.getCurrentUrl());
         }
     }, {
         key: 'unmount',
