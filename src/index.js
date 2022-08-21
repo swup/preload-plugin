@@ -97,11 +97,11 @@ export default class PreloadPlugin extends Plugin {
                             page.url = link.getAddress();
                             swup.cache.cacheUrl(page, swup.options.debugMode);
                             swup.triggerEvent('pagePreloaded');
+                            resolve(page);
                         } else {
                             reject(link.getAddress());
                             return;
                         }
-                        resolve(swup.cache.getPage(link.getAddress()));
                     }
                 });
             } else {
