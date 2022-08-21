@@ -286,13 +286,13 @@ var PreloadPlugin = function (_Plugin) {
                             var page = swup.getPageData(response);
                             if (page != null) {
                                 page.url = link.getAddress();
-                                swup.cache.cacheUrl(page, swup.options.debugMode);
+                                swup.cache.cacheUrl(page);
                                 swup.triggerEvent('pagePreloaded');
+                                resolve(page);
                             } else {
                                 reject(link.getAddress());
                                 return;
                             }
-                            resolve(swup.cache.getPage(link.getAddress()));
                         }
                     });
                 } else {
