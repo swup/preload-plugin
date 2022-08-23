@@ -276,7 +276,7 @@ var PreloadPlugin = function (_Plugin) {
 
             var link = new _helpers.Link(pathname);
             return new Promise(function (resolve, reject) {
-                if (link.getAddress() != (0, _helpers.getCurrentUrl)() && !swup.cache.exists(link.getAddress())) {
+                if (!swup.cache.exists(link.getAddress())) {
                     (0, _helpers.fetch)({ url: link.getAddress(), headers: swup.options.requestHeaders }, function (response) {
                         if (response.status === 500) {
                             swup.triggerEvent('serverError');
@@ -286,13 +286,13 @@ var PreloadPlugin = function (_Plugin) {
                             var page = swup.getPageData(response);
                             if (page != null) {
                                 page.url = link.getAddress();
-                                swup.cache.cacheUrl(page, swup.options.debugMode);
+                                swup.cache.cacheUrl(page);
                                 swup.triggerEvent('pagePreloaded');
+                                resolve(page);
                             } else {
                                 reject(link.getAddress());
                                 return;
                             }
-                            resolve(swup.cache.getPage(link.getAddress()));
                         }
                     });
                 } else {
@@ -311,6 +311,11 @@ var PreloadPlugin = function (_Plugin) {
         value: function mount() {
             var swup = this.swup;
 
+            if (!swup.options.cache) {
+                console.warn('PreloadPlugin: swup cache needs to be enabled for preloading');
+                return;
+            }
+
             swup._handlers.pagePreloaded = [];
             swup._handlers.hoverLink = [];
 
@@ -320,16 +325,23 @@ var PreloadPlugin = function (_Plugin) {
             // register mouseover handler
             swup.delegatedListeners.mouseover = (0, _delegateIt2.default)(document.body, swup.options.linkSelector, 'mouseover', this.onMouseover.bind(this));
 
-            // initial preload of page form links with [data-swup-preload]
+            // initial preload of links with [data-swup-preload] attr
             swup.preloadPages();
 
             // do the same on every content replace
             swup.on('contentReplaced', this.onContentReplaced);
+
+            // cache unmodified dom of initial/current page
+            swup.preloadPage((0, _helpers.getCurrentUrl)());
         }
     }, {
         key: 'unmount',
         value: function unmount() {
             var swup = this.swup;
+
+            if (!swup.options.cache) {
+                return;
+            }
 
             swup._handlers.pagePreloaded = null;
             swup._handlers.hoverLink = null;

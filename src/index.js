@@ -9,6 +9,11 @@ export default class PreloadPlugin extends Plugin {
     mount() {
         const swup = this.swup;
 
+        if (!swup.options.cache) {
+            console.warn('PreloadPlugin: swup cache needs to be enabled for preloading');
+            return;
+        }
+
         swup._handlers.pagePreloaded = [];
         swup._handlers.hoverLink = [];
 
@@ -23,15 +28,22 @@ export default class PreloadPlugin extends Plugin {
             this.onMouseover.bind(this)
         );
 
-        // initial preload of page form links with [data-swup-preload]
+        // initial preload of links with [data-swup-preload] attr
         swup.preloadPages();
 
         // do the same on every content replace
         swup.on('contentReplaced', this.onContentReplaced)
+
+        // cache unmodified dom of initial/current page
+        swup.preloadPage(getCurrentUrl());
     }
 
     unmount() {
         const swup = this.swup;
+
+        if (!swup.options.cache) {
+            return;
+        }
 
         swup._handlers.pagePreloaded = null;
         swup._handlers.hoverLink = null;
@@ -73,7 +85,7 @@ export default class PreloadPlugin extends Plugin {
 
         let link = new Link(pathname);
         return new Promise((resolve, reject) => {
-            if (link.getAddress() != getCurrentUrl() && !swup.cache.exists(link.getAddress())) {
+            if (!swup.cache.exists(link.getAddress())) {
                 fetch({ url: link.getAddress(), headers: swup.options.requestHeaders }, (response) => {
                     if (response.status === 500) {
                         swup.triggerEvent('serverError');
@@ -83,13 +95,13 @@ export default class PreloadPlugin extends Plugin {
                         let page = swup.getPageData(response);
                         if (page != null) {
                             page.url = link.getAddress();
-                            swup.cache.cacheUrl(page, swup.options.debugMode);
+                            swup.cache.cacheUrl(page);
                             swup.triggerEvent('pagePreloaded');
+                            resolve(page);
                         } else {
                             reject(link.getAddress());
                             return;
                         }
-                        resolve(swup.cache.getPage(link.getAddress()));
                     }
                 });
             } else {
