@@ -217,7 +217,7 @@ module.exports = _index2.default; // this is here for webpack to expose SwupPlug
 
 
 Object.defineProperty(exports, "__esModule", {
-    value: true
+	value: true
 });
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
@@ -243,119 +243,135 @@ function _possibleConstructorReturn(self, call) { if (!self) { throw new Referen
 function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
 var PreloadPlugin = function (_Plugin) {
-    _inherits(PreloadPlugin, _Plugin);
+	_inherits(PreloadPlugin, _Plugin);
 
-    function PreloadPlugin() {
-        var _ref;
+	function PreloadPlugin() {
+		var _ref;
 
-        var _temp, _this, _ret;
+		var _temp, _this, _ret;
 
-        _classCallCheck(this, PreloadPlugin);
+		_classCallCheck(this, PreloadPlugin);
 
-        for (var _len = arguments.length, args = Array(_len), _key = 0; _key < _len; _key++) {
-            args[_key] = arguments[_key];
-        }
+		for (var _len = arguments.length, args = Array(_len), _key = 0; _key < _len; _key++) {
+			args[_key] = arguments[_key];
+		}
 
-        return _ret = (_temp = (_this = _possibleConstructorReturn(this, (_ref = PreloadPlugin.__proto__ || Object.getPrototypeOf(PreloadPlugin)).call.apply(_ref, [this].concat(args))), _this), _this.name = "PreloadPlugin", _this.onContentReplaced = function () {
-            _this.swup.preloadPages();
-        }, _this.onMouseover = function (event) {
-            var swup = _this.swup;
+		return _ret = (_temp = (_this = _possibleConstructorReturn(this, (_ref = PreloadPlugin.__proto__ || Object.getPrototypeOf(PreloadPlugin)).call.apply(_ref, [this].concat(args))), _this), _this.name = 'PreloadPlugin', _this.onContentReplaced = function () {
+			_this.swup.preloadPages();
+		}, _this.onMouseover = function (event) {
+			var swup = _this.swup;
+			var linkEl = event.delegateTarget;
 
-            swup.triggerEvent('hoverLink', event);
+			if (_this.ignoreLink(linkEl)) return;
 
-            var link = new _helpers.Link(event.delegateTarget);
-            if (link.getAddress() !== (0, _helpers.getCurrentUrl)() && !swup.cache.exists(link.getAddress()) && swup.preloadPromise == null) {
-                swup.preloadPromise = swup.preloadPage(link.getAddress());
-                swup.preloadPromise.route = link.getAddress();
-                swup.preloadPromise.finally(function () {
-                    swup.preloadPromise = null;
-                });
-            }
-        }, _this.preloadPage = function (pathname) {
-            var swup = _this.swup;
+			swup.triggerEvent('hoverLink', event);
 
-            var link = new _helpers.Link(pathname);
-            return new Promise(function (resolve, reject) {
-                if (!swup.cache.exists(link.getAddress())) {
-                    (0, _helpers.fetch)({ url: link.getAddress(), headers: swup.options.requestHeaders }, function (response) {
-                        if (response.status === 500) {
-                            swup.triggerEvent('serverError');
-                            reject(link.getAddress());
-                        } else {
-                            // get json data
-                            var page = swup.getPageData(response);
-                            if (page != null) {
-                                page.url = link.getAddress();
-                                swup.cache.cacheUrl(page);
-                                swup.triggerEvent('pagePreloaded');
-                                resolve(page);
-                            } else {
-                                reject(link.getAddress());
-                                return;
-                            }
-                        }
-                    });
-                } else {
-                    resolve(swup.cache.getPage(link.getAddress()));
-                }
-            });
-        }, _this.preloadPages = function () {
-            (0, _utils.queryAll)('[data-swup-preload]').forEach(function (element) {
-                _this.swup.preloadPage(element.href);
-            });
-        }, _temp), _possibleConstructorReturn(_this, _ret);
-    }
+			var link = new _helpers.Link(linkEl);
+			if (link.getAddress() !== (0, _helpers.getCurrentUrl)() && !swup.cache.exists(link.getAddress()) && swup.preloadPromise == null) {
+				swup.preloadPromise = swup.preloadPage(link.getAddress());
+				swup.preloadPromise.route = link.getAddress();
+				swup.preloadPromise.finally(function () {
+					swup.preloadPromise = null;
+				});
+			}
+		}, _this.preloadPage = function (pathname) {
+			var swup = _this.swup;
 
-    _createClass(PreloadPlugin, [{
-        key: 'mount',
-        value: function mount() {
-            var swup = this.swup;
+			var link = new _helpers.Link(pathname);
+			return new Promise(function (resolve, reject) {
+				if (!swup.cache.exists(link.getAddress())) {
+					(0, _helpers.fetch)({ url: link.getAddress(), headers: swup.options.requestHeaders }, function (response) {
+						if (response.status === 500) {
+							swup.triggerEvent('serverError');
+							reject(link.getAddress());
+						} else {
+							// get json data
+							var page = swup.getPageData(response);
+							if (page != null) {
+								page.url = link.getAddress();
+								swup.cache.cacheUrl(page);
+								swup.triggerEvent('pagePreloaded');
+								resolve(page);
+							} else {
+								reject(link.getAddress());
+								return;
+							}
+						}
+					});
+				} else {
+					resolve(swup.cache.getPage(link.getAddress()));
+				}
+			});
+		}, _this.preloadPages = function () {
+			(0, _utils.queryAll)('[data-swup-preload]').forEach(function (element) {
+				_this.swup.preloadPage(element.href);
+			});
+		}, _temp), _possibleConstructorReturn(_this, _ret);
+	}
 
-            if (!swup.options.cache) {
-                console.warn('PreloadPlugin: swup cache needs to be enabled for preloading');
-                return;
-            }
+	_createClass(PreloadPlugin, [{
+		key: 'mount',
+		value: function mount() {
+			var swup = this.swup;
 
-            swup._handlers.pagePreloaded = [];
-            swup._handlers.hoverLink = [];
+			if (!swup.options.cache) {
+				console.warn('PreloadPlugin: swup cache needs to be enabled for preloading');
+				return;
+			}
 
-            swup.preloadPage = this.preloadPage;
-            swup.preloadPages = this.preloadPages;
+			swup._handlers.pagePreloaded = [];
+			swup._handlers.hoverLink = [];
 
-            // register mouseover handler
-            swup.delegatedListeners.mouseover = (0, _delegateIt2.default)(document.body, swup.options.linkSelector, 'mouseover', this.onMouseover.bind(this));
+			swup.preloadPage = this.preloadPage;
+			swup.preloadPages = this.preloadPages;
 
-            // initial preload of links with [data-swup-preload] attr
-            swup.preloadPages();
+			// register mouseover handler
+			swup.delegatedListeners.mouseover = (0, _delegateIt2.default)(document.body, swup.options.linkSelector, 'mouseover', this.onMouseover.bind(this));
 
-            // do the same on every content replace
-            swup.on('contentReplaced', this.onContentReplaced);
+			// initial preload of links with [data-swup-preload] attr
+			swup.preloadPages();
 
-            // cache unmodified dom of initial/current page
-            swup.preloadPage((0, _helpers.getCurrentUrl)());
-        }
-    }, {
-        key: 'unmount',
-        value: function unmount() {
-            var swup = this.swup;
+			// do the same on every content replace
+			swup.on('contentReplaced', this.onContentReplaced);
 
-            if (!swup.options.cache) {
-                return;
-            }
+			// cache unmodified dom of initial/current page
+			swup.preloadPage((0, _helpers.getCurrentUrl)());
+		}
+	}, {
+		key: 'unmount',
+		value: function unmount() {
+			var swup = this.swup;
 
-            swup._handlers.pagePreloaded = null;
-            swup._handlers.hoverLink = null;
+			if (!swup.options.cache) {
+				return;
+			}
 
-            swup.preloadPage = null;
-            swup.preloadPages = null;
+			swup._handlers.pagePreloaded = null;
+			swup._handlers.hoverLink = null;
 
-            swup.delegatedListeners.mouseover.destroy();
+			swup.preloadPage = null;
+			swup.preloadPages = null;
 
-            swup.off('contentReplaced', this.onContentReplaced);
-        }
-    }]);
+			swup.delegatedListeners.mouseover.destroy();
 
-    return PreloadPlugin;
+			swup.off('contentReplaced', this.onContentReplaced);
+		}
+	}, {
+		key: 'ignoreLink',
+
+
+		/**
+   * Apply swup.ignoreLink (will become available in swup@3)
+   */
+		value: function ignoreLink(linkEl) {
+			if (typeof this.swup.ignoreLink === 'function') {
+				return this.swup.ignoreLink(linkEl);
+			}
+			return false;
+		}
+	}]);
+
+	return PreloadPlugin;
 }(_plugin2.default);
 
 exports.default = PreloadPlugin;
