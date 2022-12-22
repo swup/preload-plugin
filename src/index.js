@@ -127,6 +127,7 @@ export default class PreloadPlugin extends Plugin {
 
 	preloadPages = () => {
 		queryAll('[data-swup-preload]').forEach((element) => {
+            if (this.ignoreLink(element)) return;
 			this.swup.preloadPage(element.href);
 		});
 	};
