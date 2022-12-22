@@ -60,12 +60,25 @@ export default class PreloadPlugin extends Plugin {
         this.swup.preloadPages();
     }
 
+    /**
+     * Apply swup.ignoreLink (will become available in swup@3)
+     */
+    ignoreLink(linkEl) {
+        if (typeof this.swup.ignoreLink === 'function') {
+            return this.swup.ignoreLink(linkEl);
+        }
+        return false;
+    }
+
     onMouseover = event => {
         const swup = this.swup;
+        const linkEl = event.delegateTarget;
+
+        if (this.ignoreLink(linkEl)) return;
 
         swup.triggerEvent('hoverLink', event);
 
-        const link = new Link(event.delegateTarget);
+        const link = new Link(linkEl);
         if (
             link.getAddress() !== getCurrentUrl() &&
             !swup.cache.exists(link.getAddress()) &&
