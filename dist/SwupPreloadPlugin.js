@@ -304,6 +304,7 @@ var PreloadPlugin = function (_Plugin) {
 			});
 		}, _this.preloadPages = function () {
 			(0, _utils.queryAll)('[data-swup-preload]').forEach(function (element) {
+				if (_this.ignoreLink(element)) return;
 				_this.swup.preloadPage(element.href);
 			});
 		}, _temp), _possibleConstructorReturn(_this, _ret);
