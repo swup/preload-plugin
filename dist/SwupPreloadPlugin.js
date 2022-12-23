@@ -261,46 +261,58 @@ var PreloadPlugin = function (_Plugin) {
 		}, _this.onMouseover = function (event) {
 			var swup = _this.swup;
 			var linkEl = event.delegateTarget;
-
-			if (_this.ignoreLink(linkEl)) return;
+			var link = new _helpers.Link(linkEl);
 
 			swup.triggerEvent('hoverLink', event);
 
-			var link = new _helpers.Link(linkEl);
-			if (link.getAddress() !== (0, _helpers.getCurrentUrl)() && !swup.cache.exists(link.getAddress()) && swup.preloadPromise == null) {
-				swup.preloadPromise = swup.preloadPage(link.getAddress());
-				swup.preloadPromise.route = link.getAddress();
-				swup.preloadPromise.finally(function () {
-					swup.preloadPromise = null;
-				});
-			}
+			// Bail early if the visit should be ignored by swup
+			if (_this.shouldIgnoreVisit(linkEl.href, { el: linkEl })) return;
+
+			// Bail early if there is already a preload running
+			if (swup.preloadPromise != null) return;
+
+			swup.preloadPromise = swup.preloadPage(link.getAddress());
+			swup.preloadPromise.route = link.getAddress();
+			swup.preloadPromise.finally(function () {
+				swup.preloadPromise = null;
+			});
 		}, _this.preloadPage = function (pathname) {
 			var swup = _this.swup;
-
 			var link = new _helpers.Link(pathname);
+
 			return new Promise(function (resolve, reject) {
-				if (!swup.cache.exists(link.getAddress())) {
-					(0, _helpers.fetch)({ url: link.getAddress(), headers: swup.options.requestHeaders }, function (response) {
-						if (response.status === 500) {
-							swup.triggerEvent('serverError');
-							reject(link.getAddress());
-						} else {
-							// get json data
-							var page = swup.getPageData(response);
-							if (page != null) {
-								page.url = link.getAddress();
-								swup.cache.cacheUrl(page);
-								swup.triggerEvent('pagePreloaded');
-								resolve(page);
-							} else {
-								reject(link.getAddress());
-								return;
-							}
-						}
-					});
-				} else {
+				// Resolve and return early if the page is already in the cache
+				if (swup.cache.exists(link.getAddress())) {
 					resolve(swup.cache.getPage(link.getAddress()));
+					return;
 				}
+
+				(0, _helpers.fetch)({
+					url: link.getAddress(),
+					headers: swup.options.requestHeaders
+				}, function (response) {
+					// Reject and bail early if the server responded with an error
+					if (response.status === 500) {
+						swup.triggerEvent('serverError');
+						reject(link.getAddress());
+						return;
+					}
+
+					// Parse the JSON data from the response
+					var page = swup.getPageData(response);
+
+					// Reject and return early if something went wrong in `getPageData`
+					if (page == null) {
+						reject(link.getAddress());
+						return;
+					}
+
+					// Finally, prepare the page, store it in the cache, trigger an event and resolve
+					page.url = link.getAddress();
+					swup.cache.cacheUrl(page);
+					swup.triggerEvent('pagePreloaded');
+					resolve(page);
+				});
 			});
 		}, _this.preloadPages = function () {
 			(0, _utils.queryAll)('[data-swup-preload]').forEach(function (element) {
@@ -358,15 +370,18 @@ var PreloadPlugin = function (_Plugin) {
 			swup.off('contentReplaced', this.onContentReplaced);
 		}
 	}, {
-		key: 'ignoreLink',
+		key: 'shouldIgnoreVisit',
 
 
 		/**
    * Apply swup.ignoreLink (will become available in swup@3)
    */
-		value: function ignoreLink(linkEl) {
-			if (typeof this.swup.ignoreLink === 'function') {
-				return this.swup.ignoreLink(linkEl);
+		value: function shouldIgnoreVisit(href) {
+			var _ref2 = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {},
+			    el = _ref2.el;
+
+			if (typeof this.swup.shouldIgnoreVisit === 'function') {
+				return this.swup.shouldIgnoreVisit(href, { el: el });
 			}
 			return false;
 		}
