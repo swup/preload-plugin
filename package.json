@@ -1,9 +1,10 @@
 {
   "name": "@swup/preload-plugin",
-  "version": "1.0.5",
+  "version": "1.0.6",
   "description": "Swup preload plugin.",
   "main": "lib/index.js",
   "scripts": {
+    "lint": "prettier src/**/*.{js,mjs} --write",
     "compile": "babel --presets es2015,stage-0 -d lib/ src/",
     "build": "webpack-cli",
     "prepublish": "npm run compile && npm run build"
@@ -13,6 +14,18 @@
     "email": "gmarcuk@gmail.com",
     "url": "https://gmrchk.com/"
   },
+  "contributors": [
+    {
+      "name": "Philipp Daun",
+      "email": "daun@daun.ltd",
+      "url": "https://philippdaun.net"
+    },
+    {
+      "name": "Rasso Hilber",
+      "email": "mail@rassohilber.com",
+      "url": "https://rassohilber.com"
+    }
+  ],
   "license": "MIT",
   "repository": {
     "type": "git",
@@ -34,5 +47,6 @@
     "@swup/plugin": "^1.0.0",
     "delegate-it": "^3.0.1",
     "swup": "^2.0.17"
-  }
+  },
+  "prettier": "@swup/prettier-config"
 }
