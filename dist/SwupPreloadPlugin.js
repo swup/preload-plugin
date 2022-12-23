@@ -258,24 +258,15 @@ var PreloadPlugin = function (_Plugin) {
 
 		return _ret = (_temp = (_this = _possibleConstructorReturn(this, (_ref = PreloadPlugin.__proto__ || Object.getPrototypeOf(PreloadPlugin)).call.apply(_ref, [this].concat(args))), _this), _this.name = 'PreloadPlugin', _this.onContentReplaced = function () {
 			_this.swup.preloadPages();
-		}, _this.onMouseover = function (event) {
-			var swup = _this.swup;
-			var linkEl = event.delegateTarget;
-			var link = new _helpers.Link(linkEl);
+		}, _this.onMouseOver = function (event) {
+			_this.swup.triggerEvent('hoverLink', event);
 
-			swup.triggerEvent('hoverLink', event);
-
-			// Bail early if the visit should be ignored by swup
-			if (_this.shouldIgnoreVisit(linkEl.href, { el: linkEl })) return;
-
-			// Bail early if there is already a preload running
-			if (swup.preloadPromise != null) return;
-
-			swup.preloadPromise = swup.preloadPage(link.getAddress());
-			swup.preloadPromise.route = link.getAddress();
-			swup.preloadPromise.finally(function () {
-				swup.preloadPromise = null;
-			});
+			clearTimeout(_this.mouseOverTimeout);
+			_this.mouseOverTimeout = setTimeout(function () {
+				return _this.maybePreload(event.delegateTarget);
+			}, _this.mouseOverDelay);
+		}, _this.onTouchStart = function (event) {
+			_this.maybePreload(event.delegateTarget);
 		}, _this.preloadPage = function (pathname) {
 			var swup = _this.swup;
 			var link = new _helpers.Link(pathname);
@@ -315,9 +306,9 @@ var PreloadPlugin = function (_Plugin) {
 				});
 			});
 		}, _this.preloadPages = function () {
-			(0, _utils.queryAll)('[data-swup-preload]').forEach(function (element) {
-				if (_this.ignoreLink(element)) return;
-				_this.swup.preloadPage(element.href);
+			(0, _utils.queryAll)('[data-swup-preload]').forEach(function (el) {
+				if (_this.shouldIgnoreVisit(el.href, { el: el })) return;
+				_this.swup.preloadPage(el.href);
 			});
 		}, _temp), _possibleConstructorReturn(_this, _ret);
 	}
@@ -338,8 +329,14 @@ var PreloadPlugin = function (_Plugin) {
 			swup.preloadPage = this.preloadPage;
 			swup.preloadPages = this.preloadPages;
 
+			// Preload plugin will wait 100ms before preloading a link after mouseover
+			this.mouseOverDelay = 100;
+
 			// register mouseover handler
-			swup.delegatedListeners.mouseover = (0, _delegateIt2.default)(document.body, swup.options.linkSelector, 'mouseover', this.onMouseover.bind(this));
+			swup.delegatedListeners.mouseover = (0, _delegateIt2.default)(document.body, swup.options.linkSelector, 'mouseover', this.onMouseOver.bind(this));
+
+			// register touchstart handler
+			swup.delegatedListeners.touchstart = (0, _delegateIt2.default)(document.body, swup.options.linkSelector, 'touchstart', this.onTouchStart.bind(this), { capture: true });
 
 			// initial preload of links with [data-swup-preload] attr
 			swup.preloadPages();
@@ -366,15 +363,19 @@ var PreloadPlugin = function (_Plugin) {
 			swup.preloadPages = null;
 
 			swup.delegatedListeners.mouseover.destroy();
+			swup.delegatedListeners.touchstart.destroy();
 
 			swup.off('contentReplaced', this.onContentReplaced);
+
+			clearTimeout(this.mouseOverTimeout);
+			this.mouseOverTimeout = undefined;
 		}
 	}, {
 		key: 'shouldIgnoreVisit',
 
 
 		/**
-   * Apply swup.ignoreLink (will become available in swup@3)
+   * Apply swup.shouldIgnoreVisit (will become available in swup@3)
    */
 		value: function shouldIgnoreVisit(href) {
 			var _ref2 = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {},
@@ -384,6 +385,24 @@ var PreloadPlugin = function (_Plugin) {
 				return this.swup.shouldIgnoreVisit(href, { el: el });
 			}
 			return false;
+		}
+	}, {
+		key: 'maybePreload',
+		value: function maybePreload(linkEl) {
+			var swup = this.swup;
+			var link = new _helpers.Link(linkEl);
+
+			// Bail early if the visit should be ignored by swup
+			if (this.shouldIgnoreVisit(linkEl.href, { el: linkEl })) return;
+
+			// Bail early if there is already a preload running
+			if (swup.preloadPromise != null) return;
+
+			swup.preloadPromise = swup.preloadPage(link.getAddress());
+			swup.preloadPromise.route = link.getAddress();
+			swup.preloadPromise.finally(function () {
+				swup.preloadPromise = null;
+			});
 		}
 	}]);
 
