@@ -20,12 +20,24 @@ export default class PreloadPlugin extends Plugin {
 		swup.preloadPage = this.preloadPage;
 		swup.preloadPages = this.preloadPages;
 
+		// Preload plugin will wait 100ms before preloading a link after mouseover
+		this.mouseOverDelay = 100;
+
 		// register mouseover handler
 		swup.delegatedListeners.mouseover = delegate(
 			document.body,
 			swup.options.linkSelector,
 			'mouseover',
-			this.onMouseover.bind(this)
+			this.onMouseOver.bind(this)
+		);
+
+		// register touchstart handler
+		swup.delegatedListeners.touchstart = delegate(
+			document.body,
+			swup.options.linkSelector,
+			'touchstart',
+			this.onTouchStart.bind(this),
+			{ capture: true }
 		);
 
 		// initial preload of links with [data-swup-preload] attr
@@ -52,8 +64,12 @@ export default class PreloadPlugin extends Plugin {
 		swup.preloadPages = null;
 
 		swup.delegatedListeners.mouseover.destroy();
+		swup.delegatedListeners.touchstart.destroy();
 
 		swup.off('contentReplaced', this.onContentReplaced);
+
+		clearTimeout(this.mouseOverTimeout);
+		this.mouseOverTimeout = undefined;
 	}
 
 	onContentReplaced = () => {
@@ -61,7 +77,7 @@ export default class PreloadPlugin extends Plugin {
 	};
 
 	/**
-	 * Apply swup.ignoreLink (will become available in swup@3)
+	 * Apply swup.shouldIgnoreVisit (will become available in swup@3)
 	 */
 	shouldIgnoreVisit(href, { el } = {}) {
 		if (typeof this.swup.shouldIgnoreVisit === 'function') {
@@ -70,12 +86,23 @@ export default class PreloadPlugin extends Plugin {
 		return false;
 	}
 
-	onMouseover = (event) => {
-		const swup = this.swup;
-		const linkEl = event.delegateTarget;
-		const link = new Link(linkEl);
+	onMouseOver = (event) => {
+		this.swup.triggerEvent('hoverLink', event);
 
-		swup.triggerEvent('hoverLink', event);
+		clearTimeout(this.mouseOverTimeout);
+		this.mouseOverTimeout = setTimeout(
+			() => this.maybePreload(event.delegateTarget),
+			this.mouseOverDelay
+		);
+	};
+
+	onTouchStart = (event) => {
+		this.maybePreload(event.delegateTarget);
+	};
+
+	maybePreload(linkEl) {
+		const swup = this.swup;
+		const link = new Link(linkEl);
 
 		// Bail early if the visit should be ignored by swup
 		if (this.shouldIgnoreVisit(linkEl.href, { el: linkEl })) return;
@@ -88,7 +115,7 @@ export default class PreloadPlugin extends Plugin {
 		swup.preloadPromise.finally(() => {
 			swup.preloadPromise = null;
 		});
-	};
+	}
 
 	preloadPage = (pathname) => {
 		const swup = this.swup;
