@@ -70,16 +70,6 @@ export default class PreloadPlugin extends Plugin {
 		return false;
 	}
 
-	/**
-	 * Compare two URLs, after resolving them (if resolveUrl is available)
-	 */
-	isSameResolvedUrl(url1, url2) {
-		if (typeof this.swup.isSameResolvedUrl === 'function') {
-			return this.swup.isSameResolvedUrl(url1, url2);
-		}
-		return url1 === url2;
-	}
-
 	onMouseover = (event) => {
 		const swup = this.swup;
 		const linkEl = event.delegateTarget;
@@ -90,12 +80,6 @@ export default class PreloadPlugin extends Plugin {
 		// Bail early if the visit should be ignored by swup
 		if (this.shouldIgnoreVisit(linkEl.href, { el: linkEl })) return;
 
-		// Bail early if the link's href resolves to the same URL as the current one
-		if (this.isSameResolvedUrl(link.getAddress(), getCurrentUrl())) return;
-
-		// Bail early if the page the link points towards is already in the cache
-		if (swup.cache.exists(link.getAddress())) return;
-
 		// Bail early if there is already a preload running
 		if (swup.preloadPromise != null) return;
 
@@ -104,39 +88,48 @@ export default class PreloadPlugin extends Plugin {
 		swup.preloadPromise.finally(() => {
 			swup.preloadPromise = null;
 		});
-
 	};
 
 	preloadPage = (pathname) => {
 		const swup = this.swup;
-
 		let link = new Link(pathname);
+
 		return new Promise((resolve, reject) => {
-			if (!swup.cache.exists(link.getAddress())) {
-				fetch(
-					{ url: link.getAddress(), headers: swup.options.requestHeaders },
-					(response) => {
-						if (response.status === 500) {
-							swup.triggerEvent('serverError');
-							reject(link.getAddress());
-						} else {
-							// get json data
-							let page = swup.getPageData(response);
-							if (page != null) {
-								page.url = link.getAddress();
-								swup.cache.cacheUrl(page);
-								swup.triggerEvent('pagePreloaded');
-								resolve(page);
-							} else {
-								reject(link.getAddress());
-								return;
-							}
-						}
-					}
-				);
-			} else {
+			// Resolve and return early if the page is already in the cache
+			if (swup.cache.exists(link.getAddress())) {
 				resolve(swup.cache.getPage(link.getAddress()));
+				return;
 			}
+
+			fetch(
+				{
+					url: link.getAddress(),
+					headers: swup.options.requestHeaders
+				},
+				(response) => {
+					// Reject and bail early if the server responded with an error
+					if (response.status === 500) {
+						swup.triggerEvent('serverError');
+						reject(link.getAddress());
+						return;
+					}
+
+					// Parse the JSON data from the response
+					const page = swup.getPageData(response);
+
+					// Reject and return early if something went wrong in `getPageData`
+					if (page == null) {
+						reject(link.getAddress());
+						return;
+					}
+
+					// Finally, prepare the page, store it in the cache, trigger an event and resolve
+					page.url = link.getAddress();
+					swup.cache.cacheUrl(page);
+					swup.triggerEvent('pagePreloaded');
+					resolve(page);
+				}
+			);
 		});
 	};
 
