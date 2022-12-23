@@ -63,33 +63,48 @@ export default class PreloadPlugin extends Plugin {
 	/**
 	 * Apply swup.ignoreLink (will become available in swup@3)
 	 */
-	ignoreLink(linkEl) {
-		if (typeof this.swup.ignoreLink === 'function') {
-			return this.swup.ignoreLink(linkEl);
+	shouldIgnoreVisit(href, { el } = {}) {
+		if (typeof this.swup.shouldIgnoreVisit === 'function') {
+			return this.swup.shouldIgnoreVisit(href, { el });
 		}
 		return false;
+	}
+
+	/**
+	 * Compare two URLs, after resolving them (if resolveUrl is available)
+	 */
+	isSameResolvedUrl(url1, url2) {
+		if (typeof this.swup.isSameResolvedUrl === 'function') {
+			return this.swup.isSameResolvedUrl(url1, url2);
+		}
+		return url1 === url2;
 	}
 
 	onMouseover = (event) => {
 		const swup = this.swup;
 		const linkEl = event.delegateTarget;
-
-		if (this.ignoreLink(linkEl)) return;
+		const link = new Link(linkEl);
 
 		swup.triggerEvent('hoverLink', event);
 
-		const link = new Link(linkEl);
-		if (
-			link.getAddress() !== getCurrentUrl() &&
-			!swup.cache.exists(link.getAddress()) &&
-			swup.preloadPromise == null
-		) {
-			swup.preloadPromise = swup.preloadPage(link.getAddress());
-			swup.preloadPromise.route = link.getAddress();
-			swup.preloadPromise.finally(() => {
-				swup.preloadPromise = null;
-			});
-		}
+		// Bail early if the visit should be ignored by swup
+		if (this.shouldIgnoreVisit(linkEl.href, { el: linkEl })) return;
+
+		// Bail early if the link's href resolves to the same URL as the current one
+		if (this.isSameResolvedUrl(link.getAddress(), getCurrentUrl())) return;
+
+		// Bail early if the page the link points towards is already in the cache
+		if (swup.cache.exists(link.getAddress())) return;
+
+		// Bail early if there is already a preload running
+		if (swup.preloadPromise != null) return;
+
+		swup.preloadPromise = swup.preloadPage(link.getAddress());
+		swup.preloadPromise.route = link.getAddress();
+		swup.preloadPromise.finally(() => {
+			swup.preloadPromise = null;
+		});
+
 	};
 
 	preloadPage = (pathname) => {
