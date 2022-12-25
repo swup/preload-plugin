@@ -306,9 +306,9 @@ var PreloadPlugin = function (_Plugin) {
 				});
 			});
 		}, _this.preloadPages = function () {
-			(0, _utils.queryAll)('[data-swup-preload]').forEach(function (element) {
-				if (_this.ignoreLink(element)) return;
-				_this.swup.preloadPage(element.href);
+			(0, _utils.queryAll)('[data-swup-preload]').forEach(function (el) {
+				if (_this.shouldIgnoreVisit(el.href, { el: el })) return;
+				_this.swup.preloadPage(el.href);
 			});
 		}, _temp), _possibleConstructorReturn(_this, _ret);
 	}

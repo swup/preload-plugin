@@ -161,9 +161,9 @@ export default class PreloadPlugin extends Plugin {
 	};
 
 	preloadPages = () => {
-		queryAll('[data-swup-preload]').forEach((element) => {
-			if (this.ignoreLink(element)) return;
-			this.swup.preloadPage(element.href);
+		queryAll('[data-swup-preload]').forEach((el) => {
+			if (this.shouldIgnoreVisit(el.href, { el })) return;
+			this.swup.preloadPage(el.href);
 		});
 	};
 }
