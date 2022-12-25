@@ -104,14 +104,16 @@ export default class PreloadPlugin extends Plugin {
 		// Bail early if the visit should be ignored by swup
 		if (this.shouldIgnoreVisit(linkEl.href, { el: linkEl })) return;
 
-		swup.preloadPromise = swup.preloadPage(link.getAddress());
+		swup.preloadPromise = swup.preloadPage(link.getAddress(), {
+			cancelPreviousRequest: true
+		});
 		swup.preloadPromise.route = link.getAddress();
 		swup.preloadPromise.finally(() => {
 			swup.preloadPromise = null;
 		});
 	}
 
-	preloadPage = (pathname) => {
+	preloadPage = (pathname, { cancelPreviousRequest = false } = {}) => {
 		const swup = this.swup;
 		let link = new Link(pathname);
 
@@ -128,7 +130,7 @@ export default class PreloadPlugin extends Plugin {
 			 * a possibly running previous preload request before requesting
 			 * the new page from the server
 			 */
-			if (this.preloadRequest != null) {
+			if (cancelPreviousRequest && this.preloadRequest != null) {
 				this.preloadRequest.onreadystatechange = null;
 				this.preloadRequest.abort();
 				this.preloadRequest = null;
