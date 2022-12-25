@@ -20,8 +20,9 @@ export default class PreloadPlugin extends Plugin {
 		swup.preloadPage = this.preloadPage;
 		swup.preloadPages = this.preloadPages;
 
-		// Preload plugin will wait 100ms before preloading a link after mouseover
-		this.mouseOverDelay = 100;
+		// Will hold a reference to the current preload request,
+		// So that it can be aborted
+		this.preloadRequest = null;
 
 		// register mouseover handler
 		swup.delegatedListeners.mouseover = delegate(
@@ -89,26 +90,19 @@ export default class PreloadPlugin extends Plugin {
 	onMouseOver = (event) => {
 		this.swup.triggerEvent('hoverLink', event);
 
-		clearTimeout(this.mouseOverTimeout);
-		this.mouseOverTimeout = setTimeout(
-			() => this.maybePreload(event.delegateTarget),
-			this.mouseOverDelay
-		);
+		this.preloadLink(event.delegateTarget);
 	};
 
 	onTouchStart = (event) => {
-		this.maybePreload(event.delegateTarget);
+		this.preloadLink(event.delegateTarget);
 	};
 
-	maybePreload(linkEl) {
+	preloadLink(linkEl) {
 		const swup = this.swup;
 		const link = new Link(linkEl);
 
 		// Bail early if the visit should be ignored by swup
 		if (this.shouldIgnoreVisit(linkEl.href, { el: linkEl })) return;
-
-		// Bail early if there is already a preload running
-		if (swup.preloadPromise != null) return;
 
 		swup.preloadPromise = swup.preloadPage(link.getAddress());
 		swup.preloadPromise.route = link.getAddress();
@@ -128,7 +122,19 @@ export default class PreloadPlugin extends Plugin {
 				return;
 			}
 
-			fetch(
+			/**
+			 * The requested page is not in the cache yet, so we want to
+			 * preload it. To save ressources on the server, we'll abort
+			 * a possibly running previous preload request before requesting
+			 * the new page from the server
+			 */
+			if (this.preloadRequest != null) {
+				this.preloadRequest.onreadystatechange = null;
+				this.preloadRequest.abort();
+				this.preloadRequest = null;
+			}
+
+			this.preloadRequest = fetch(
 				{
 					url: link.getAddress(),
 					headers: swup.options.requestHeaders
