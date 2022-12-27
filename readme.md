@@ -1,4 +1,5 @@
 # Swup Preload plugin
+
 This plugin adds preloading support to [swup](https://github.com/swup/swup):
 
 - Any link element found in the DOM that matches `[data-swup-preload]` will automatically be preloaded.
@@ -7,6 +8,7 @@ This plugin adds preloading support to [swup](https://github.com/swup/swup):
 - If hovering/touching a link, any previous preload request will automatically be aborted before starting the new request. This saves resources on the server and makes sure the actual page that the user wants to visit will be preloaded.
 
 ## Installation
+
 This plugin can be installed with npm
 
 ```bash
