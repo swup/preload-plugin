@@ -164,7 +164,7 @@ export default class PreloadPlugin extends Plugin {
 					// Finally, prepare the page, store it in the cache, trigger an event and resolve
 					page.url = link.getAddress();
 					swup.cache.cacheUrl(page);
-					swup.triggerEvent('pagePreloaded');
+					swup.triggerEvent('pagePreloaded', page);
 					resolve(page);
 				}
 			);
