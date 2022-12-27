@@ -103,6 +103,9 @@ export default class PreloadPlugin extends Plugin {
 		// Bail early if the visit should be ignored by swup
 		if (this.shouldIgnoreVisit(linkEl.href, { el: linkEl })) return;
 
+		// Bail early if a preload for the requested route already exists
+		if (swup.preloadPromise && swup.preloadPromise.route === link.getAddress()) return;
+
 		swup.preloadPromise = swup.preloadPage(link.getAddress(), {
 			abortPreviousRequest: true
 		});
