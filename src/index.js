@@ -144,6 +144,8 @@ export default class PreloadPlugin extends Plugin {
 					headers: swup.options.requestHeaders
 				},
 				(response) => {
+					this.preloadRequest = null;
+
 					// Reject and bail early if the server responded with an error
 					if (response.status === 500) {
 						swup.triggerEvent('serverError');
