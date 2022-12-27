@@ -20,8 +20,7 @@ export default class PreloadPlugin extends Plugin {
 		swup.preloadPage = this.preloadPage;
 		swup.preloadPages = this.preloadPages;
 
-		// Will hold a reference to the current preload request,
-		// So that it can be aborted
+		// Will hold a reference to the current preload request
 		this.preloadRequest = null;
 
 		// register mouseover handler
