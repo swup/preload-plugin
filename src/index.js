@@ -67,9 +67,6 @@ export default class PreloadPlugin extends Plugin {
 		swup.delegatedListeners.touchstart.destroy();
 
 		swup.off('contentReplaced', this.onContentReplaced);
-
-		clearTimeout(this.mouseOverTimeout);
-		this.mouseOverTimeout = undefined;
 	}
 
 	onContentReplaced = () => {
