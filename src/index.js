@@ -103,7 +103,7 @@ export default class PreloadPlugin extends Plugin {
 		swup.preloadPromise = swup.preloadPage(route, {
 			priority: 'low'
 		});
-		swup.preloadPromise.finally(() => {
+		swup.preloadPromise.catch(() => {}).finally(() => {
 			swup.preloadPromise = null;
 		});
 	}
@@ -130,7 +130,6 @@ export default class PreloadPlugin extends Plugin {
 			 * abort it to save resources on the server.
 			 */
 			if (swup.preloadPromise?.priority === 'low') {
-				swup.preloadPromise.request.onreadystatechange = null;
 				swup.preloadPromise.request.abort();
 			}
 
@@ -145,6 +144,12 @@ export default class PreloadPlugin extends Plugin {
 					// Reject and bail early if the server responded with an error
 					if (response.status === 500) {
 						swup.triggerEvent('serverError');
+						reject(route);
+						return;
+					}
+
+					// Reject empty responses (Happenes if a request was aborted)
+					if (response.responseText === "") {
 						reject(route);
 						return;
 					}
@@ -165,7 +170,6 @@ export default class PreloadPlugin extends Plugin {
 					resolve(page);
 				}
 			);
-
 		});
 		promise.request = request;
 		promise.priority = priority;
