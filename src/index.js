@@ -20,9 +20,6 @@ export default class PreloadPlugin extends Plugin {
 		swup.preloadPage = this.preloadPage;
 		swup.preloadPages = this.preloadPages;
 
-		// Will hold a reference to the current preload request
-		this.preloadRequest = null;
-
 		// register mouseover handler
 		swup.delegatedListeners.mouseover = delegate(
 			document.body,
@@ -95,18 +92,17 @@ export default class PreloadPlugin extends Plugin {
 
 	preloadLink(linkEl) {
 		const swup = this.swup;
-		const link = new Link(linkEl);
+		const route = new Link(linkEl).getAddress();
 
 		// Bail early if the visit should be ignored by swup
 		if (this.shouldIgnoreVisit(linkEl.href, { el: linkEl })) return;
 
 		// Bail early if a preload for the requested route already exists
-		if (swup.preloadPromise && swup.preloadPromise.route === link.getAddress()) return;
+		if (swup.preloadPromise && swup.preloadPromise.route === route) return;
 
-		swup.preloadPromise = swup.preloadPage(link.getAddress(), {
+		swup.preloadPromise = swup.preloadPage(route, {
 			abortable: true
 		});
-		swup.preloadPromise.route = link.getAddress();
 		swup.preloadPromise.finally(() => {
 			swup.preloadPromise = null;
 		});
@@ -119,28 +115,28 @@ export default class PreloadPlugin extends Plugin {
 	 */
 	preloadPage = (pathname, { abortable = false } = {}) => {
 		const swup = this.swup;
-		let link = new Link(pathname);
+		const route = new Link(pathname).getAddress();
+		let request = null;
 
-		return new Promise((resolve, reject) => {
+		const promise = new Promise((resolve, reject) => {
 			// Resolve and return early if the page is already in the cache
-			if (swup.cache.exists(link.getAddress())) {
-				resolve(swup.cache.getPage(link.getAddress()));
+			if (swup.cache.exists(route)) {
+				resolve(swup.cache.getPage(route));
 				return;
 			}
 
 			/**
-			 * If there is still another abortable preloadRequest running,
+			 * If there is still another abortable preload running,
 			 * abort it to save resources on the server.
 			 */
-			if (this.preloadRequest?.abortable) {
-				this.preloadRequest.onreadystatechange = null;
-				this.preloadRequest.abort();
-				this.preloadRequest = null;
+			if (swup.preloadPromise?.abortable) {
+				swup.preloadPromise.request.onreadystatechange = null;
+				swup.preloadPromise.request.abort();
 			}
 
-			this.preloadRequest = fetch(
+			request = fetch(
 				{
-					url: link.getAddress(),
+					url: route,
 					headers: swup.options.requestHeaders
 				},
 				(response) => {
@@ -149,7 +145,7 @@ export default class PreloadPlugin extends Plugin {
 					// Reject and bail early if the server responded with an error
 					if (response.status === 500) {
 						swup.triggerEvent('serverError');
-						reject(link.getAddress());
+						reject(route);
 						return;
 					}
 
@@ -158,24 +154,23 @@ export default class PreloadPlugin extends Plugin {
 
 					// Reject and return early if something went wrong in `getPageData`
 					if (page == null) {
-						reject(link.getAddress());
+						reject(route);
 						return;
 					}
 
 					// Finally, prepare the page, store it in the cache, trigger an event and resolve
-					page.url = link.getAddress();
+					page.url = route;
 					swup.cache.cacheUrl(page);
 					swup.triggerEvent('pagePreloaded', page);
 					resolve(page);
 				}
 			);
-			/**
-			 * Save `abortable` in the preloadRequest, so that
-			 * subsequent preload requests know if they may abort it
-			 */
-			this.preloadRequest.abortable = abortable;
-			this.preloadRequest.route = link.getAddress();
+
 		});
+		promise.request = request;
+		promise.abortable = abortable;
+		promise.route = route;
+		return promise;
 	};
 
 	preloadPages = () => {
