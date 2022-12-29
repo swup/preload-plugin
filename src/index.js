@@ -133,7 +133,6 @@ export default class PreloadPlugin extends Plugin {
 			 * abort it to save resources on the server.
 			 */
 			if (this.preloadRequest?.priority === 'low') {
-				console.log('aborting previous preload request');
 				this.preloadRequest.onreadystatechange = null;
 				this.preloadRequest.abort();
 				this.preloadRequest = null;
