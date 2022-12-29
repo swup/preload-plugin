@@ -104,7 +104,7 @@ export default class PreloadPlugin extends Plugin {
 		if (swup.preloadPromise && swup.preloadPromise.route === link.getAddress()) return;
 
 		swup.preloadPromise = swup.preloadPage(link.getAddress(), {
-			abortPreviousRequest: true
+			mayBeAborted: true,
 		});
 		swup.preloadPromise.route = link.getAddress();
 		swup.preloadPromise.finally(() => {
@@ -112,7 +112,7 @@ export default class PreloadPlugin extends Plugin {
 		});
 	}
 
-	preloadPage = (pathname, { abortPreviousRequest = false } = {}) => {
+	preloadPage = (pathname, { mayBeAborted = false } = {}) => {
 		const swup = this.swup;
 		let link = new Link(pathname);
 
@@ -124,14 +124,10 @@ export default class PreloadPlugin extends Plugin {
 			}
 
 			/**
-			 * The requested page is not in the cache yet, so we want to
-			 * preload it. If `abortPreviousRequest` is set to true, a
-			 * possibly running previous preload request will be aborted
-			 * before starting the new request. This will save server
-			 * resources and make sure that a hovered/touched link's href
-			 * will always be preloaded.
+			 * If there is still another abortable preloadRequest running,
+			 * abort it to save resources on the server.
 			 */
-			if (abortPreviousRequest && this.preloadRequest != null) {
+			if (this.preloadRequest && this.preloadRequest.mayBeAborted) {
 				this.preloadRequest.onreadystatechange = null;
 				this.preloadRequest.abort();
 				this.preloadRequest = null;
@@ -168,6 +164,11 @@ export default class PreloadPlugin extends Plugin {
 					resolve(page);
 				}
 			);
+			/**
+			 * Save `mayBeAborted` in the preloadRequest, so that
+			 * subsequent preload requests know what to do with it
+			 */
+			this.preloadRequest.mayBeAborted = mayBeAborted;
 		});
 	};
 
