@@ -104,7 +104,7 @@ export default class PreloadPlugin extends Plugin {
 		if (swup.preloadPromise && swup.preloadPromise.route === link.getAddress()) return;
 
 		swup.preloadPromise = swup.preloadPage(link.getAddress(), {
-			mayBeAborted: true,
+			priority: 'low'
 		});
 		swup.preloadPromise.route = link.getAddress();
 		swup.preloadPromise.finally(() => {
@@ -112,7 +112,12 @@ export default class PreloadPlugin extends Plugin {
 		});
 	}
 
-	preloadPage = (pathname, { mayBeAborted = false } = {}) => {
+	/**
+	 * Preloads a page. Aborts the previous request if it's priority is 'low'
+	 *
+	 * @param {string} priority: 'high' or 'low'
+	 */
+	preloadPage = (pathname, { priority = 'high' } = {}) => {
 		const swup = this.swup;
 		let link = new Link(pathname);
 
@@ -124,10 +129,11 @@ export default class PreloadPlugin extends Plugin {
 			}
 
 			/**
-			 * If there is still another abortable preloadRequest running,
+			 * If there is still another low-priority preloadRequest running,
 			 * abort it to save resources on the server.
 			 */
-			if (this.preloadRequest && this.preloadRequest.mayBeAborted) {
+			if (this.preloadRequest?.priority === 'low') {
+				console.log('aborting previous preload request');
 				this.preloadRequest.onreadystatechange = null;
 				this.preloadRequest.abort();
 				this.preloadRequest = null;
@@ -165,10 +171,10 @@ export default class PreloadPlugin extends Plugin {
 				}
 			);
 			/**
-			 * Save `mayBeAborted` in the preloadRequest, so that
+			 * Save `priority` in the preloadRequest, so that
 			 * subsequent preload requests know what to do with it
 			 */
-			this.preloadRequest.mayBeAborted = mayBeAborted;
+			this.preloadRequest.priority = priority;
 		});
 	};
 
