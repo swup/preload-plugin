@@ -130,8 +130,8 @@ export default class PreloadPlugin extends Plugin {
 			 * abort it to save resources on the server.
 			 */
 			if (swup.preloadPromise?.priority === 'low') {
-				swup.preloadPromise.request.onreadystatechange = null;
-				swup.preloadPromise.request.abort();
+				swup.preloadPromise?.request?.onreadystatechange = null;
+				swup.preloadPromise?.request?.abort();
 			}
 
 			request = fetch(
