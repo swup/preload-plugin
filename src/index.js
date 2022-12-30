@@ -20,13 +20,24 @@ export default class PreloadPlugin extends Plugin {
 		swup.preloadPage = this.preloadPage;
 		swup.preloadPages = this.preloadPages;
 
-		// register mouseover handler
-		swup.delegatedListeners.mouseover = delegate(
-			document.body,
-			swup.options.linkSelector,
-			'mouseover',
-			this.onMouseover.bind(this)
-		);
+		if (window.matchMedia('(hover: hover)').matches) {
+			// register mouseover handler
+			swup.delegatedListeners.mouseover = delegate(
+				document.body,
+				swup.options.linkSelector,
+				'mouseover',
+				this.onMouseOver.bind(this)
+			);
+		} else {
+			// register touchstart handler
+			swup.delegatedListeners.touchstart = delegate(
+				document.body,
+				swup.options.linkSelector,
+				'touchstart',
+				this.onTouchStart.bind(this),
+				{ capture: true }
+			);
+		}
 
 		// initial preload of links with [data-swup-preload] attr
 		swup.preloadPages();
@@ -52,6 +63,7 @@ export default class PreloadPlugin extends Plugin {
 		swup.preloadPages = null;
 
 		swup.delegatedListeners.mouseover.destroy();
+		swup.delegatedListeners.touchstart.destroy();
 
 		swup.off('contentReplaced', this.onContentReplaced);
 	}
@@ -70,12 +82,18 @@ export default class PreloadPlugin extends Plugin {
 		return false;
 	}
 
-	onMouseover = (event) => {
-		const swup = this.swup;
-		const linkEl = event.delegateTarget;
-		const link = new Link(linkEl);
+	onMouseOver = (event) => {
+		this.swup.triggerEvent('hoverLink', event);
+		this.preloadLink(event.delegateTarget);
+	};
 
-		swup.triggerEvent('hoverLink', event);
+	onTouchStart = (event) => {
+		this.preloadLink(event.delegateTarget);
+	};
+
+	preloadLink(linkEl) {
+		const swup = this.swup;
+		const route = new Link(linkEl).getAddress();
 
 		// Bail early if the visit should be ignored by swup
 		if (this.shouldIgnoreVisit(linkEl.href, { el: linkEl })) return;
@@ -83,34 +101,35 @@ export default class PreloadPlugin extends Plugin {
 		// Bail early if there is already a preload running
 		if (swup.preloadPromise != null) return;
 
-		swup.preloadPromise = swup.preloadPage(link.getAddress());
-		swup.preloadPromise.route = link.getAddress();
-		swup.preloadPromise.finally(() => {
-			swup.preloadPromise = null;
-		});
-	};
+		swup.preloadPromise = swup.preloadPage(route);
+		swup.preloadPromise
+			.catch(() => {})
+			.finally(() => {
+				swup.preloadPromise = null;
+			});
+	}
 
-	preloadPage = (pathname) => {
+	preloadPage = (url) => {
 		const swup = this.swup;
-		let link = new Link(pathname);
+		const route = new Link(url).getAddress();
 
 		return new Promise((resolve, reject) => {
 			// Resolve and return early if the page is already in the cache
-			if (swup.cache.exists(link.getAddress())) {
-				resolve(swup.cache.getPage(link.getAddress()));
+			if (swup.cache.exists(route)) {
+				resolve(swup.cache.getPage(route));
 				return;
 			}
 
 			fetch(
 				{
-					url: link.getAddress(),
+					url: route,
 					headers: swup.options.requestHeaders
 				},
 				(response) => {
 					// Reject and bail early if the server responded with an error
 					if (response.status === 500) {
 						swup.triggerEvent('serverError');
-						reject(link.getAddress());
+						reject(route);
 						return;
 					}
 
@@ -119,12 +138,12 @@ export default class PreloadPlugin extends Plugin {
 
 					// Reject and return early if something went wrong in `getPageData`
 					if (page == null) {
-						reject(link.getAddress());
+						reject(route);
 						return;
 					}
 
 					// Finally, prepare the page, store it in the cache, trigger an event and resolve
-					page.url = link.getAddress();
+					page.url = route;
 					swup.cache.cacheUrl(page);
 					swup.triggerEvent('pagePreloaded');
 					resolve(page);
