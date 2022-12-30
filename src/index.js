@@ -20,7 +20,7 @@ export default class PreloadPlugin extends Plugin {
 		swup.preloadPage = this.preloadPage;
 		swup.preloadPages = this.preloadPages;
 
-		if (window.matchMedia("(hover: hover)").matches) {
+		if (window.matchMedia('(hover: hover)').matches) {
 			// register mouseover handler
 			swup.delegatedListeners.mouseover = delegate(
 				document.body,
@@ -102,9 +102,11 @@ export default class PreloadPlugin extends Plugin {
 		if (swup.preloadPromise != null) return;
 
 		swup.preloadPromise = swup.preloadPage(route);
-		swup.preloadPromise.catch(() => {}).finally(() => {
-			swup.preloadPromise = null;
-		});
+		swup.preloadPromise
+			.catch(() => {})
+			.finally(() => {
+				swup.preloadPromise = null;
+			});
 	}
 
 	preloadPage = (url) => {
