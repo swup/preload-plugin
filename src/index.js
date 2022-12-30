@@ -62,8 +62,8 @@ export default class PreloadPlugin extends Plugin {
 		swup.preloadPage = null;
 		swup.preloadPages = null;
 
-		swup.delegatedListeners.mouseover.destroy();
-		swup.delegatedListeners.touchstart.destroy();
+		swup.delegatedListeners.mouseover?.destroy();
+		swup.delegatedListeners.touchstart?.destroy();
 
 		swup.off('contentReplaced', this.onContentReplaced);
 	}
