@@ -259,9 +259,13 @@ var PreloadPlugin = function (_Plugin) {
 		return _ret = (_temp = (_this = _possibleConstructorReturn(this, (_ref = PreloadPlugin.__proto__ || Object.getPrototypeOf(PreloadPlugin)).call.apply(_ref, [this].concat(args))), _this), _this.name = 'PreloadPlugin', _this.onContentReplaced = function () {
 			_this.swup.preloadPages();
 		}, _this.onMouseOver = function (event) {
+			// Return early on devices that don't support hover
+			if (!_this.deviceSupportsHover()) return;
 			_this.swup.triggerEvent('hoverLink', event);
 			_this.preloadLink(event.delegateTarget);
 		}, _this.onTouchStart = function (event) {
+			// Return early on devices that support hover
+			if (_this.deviceSupportsHover()) return;
 			_this.preloadLink(event.delegateTarget);
 		}, _this.preloadPage = function (url) {
 			var swup = _this.swup;
@@ -325,13 +329,11 @@ var PreloadPlugin = function (_Plugin) {
 			swup.preloadPage = this.preloadPage;
 			swup.preloadPages = this.preloadPages;
 
-			if (window.matchMedia('(hover: hover)').matches) {
-				// register mouseover handler
-				swup.delegatedListeners.mouseover = (0, _delegateIt2.default)(document.body, swup.options.linkSelector, 'mouseover', this.onMouseOver.bind(this));
-			} else {
-				// register touchstart handler
-				swup.delegatedListeners.touchstart = (0, _delegateIt2.default)(document.body, swup.options.linkSelector, 'touchstart', this.onTouchStart.bind(this), { capture: true });
-			}
+			// register mouseover handler
+			swup.delegatedListeners.mouseover = (0, _delegateIt2.default)(document.body, swup.options.linkSelector, 'mouseover', this.onMouseOver.bind(this));
+
+			// register touchstart handler
+			swup.delegatedListeners.touchstart = (0, _delegateIt2.default)(document.body, swup.options.linkSelector, 'touchstart', this.onTouchStart.bind(this), { capture: true });
 
 			// initial preload of links with [data-swup-preload] attr
 			swup.preloadPages();
@@ -377,6 +379,11 @@ var PreloadPlugin = function (_Plugin) {
 				return this.swup.shouldIgnoreVisit(href, { el: el });
 			}
 			return false;
+		}
+	}, {
+		key: 'deviceSupportsHover',
+		value: function deviceSupportsHover() {
+			return window.matchMedia('(hover: hover)').matches;
 		}
 	}, {
 		key: 'preloadLink',

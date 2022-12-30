@@ -20,24 +20,22 @@ export default class PreloadPlugin extends Plugin {
 		swup.preloadPage = this.preloadPage;
 		swup.preloadPages = this.preloadPages;
 
-		if (window.matchMedia('(hover: hover)').matches) {
-			// register mouseover handler
-			swup.delegatedListeners.mouseover = delegate(
-				document.body,
-				swup.options.linkSelector,
-				'mouseover',
-				this.onMouseOver.bind(this)
-			);
-		} else {
-			// register touchstart handler
-			swup.delegatedListeners.touchstart = delegate(
-				document.body,
-				swup.options.linkSelector,
-				'touchstart',
-				this.onTouchStart.bind(this),
-				{ capture: true }
-			);
-		}
+		// register mouseover handler
+		swup.delegatedListeners.mouseover = delegate(
+			document.body,
+			swup.options.linkSelector,
+			'mouseover',
+			this.onMouseOver.bind(this)
+		);
+
+		// register touchstart handler
+		swup.delegatedListeners.touchstart = delegate(
+			document.body,
+			swup.options.linkSelector,
+			'touchstart',
+			this.onTouchStart.bind(this),
+			{ capture: true }
+		);
 
 		// initial preload of links with [data-swup-preload] attr
 		swup.preloadPages();
@@ -82,12 +80,20 @@ export default class PreloadPlugin extends Plugin {
 		return false;
 	}
 
+	deviceSupportsHover() {
+		return window.matchMedia('(hover: hover)').matches;
+	}
+
 	onMouseOver = (event) => {
+		// Return early on devices that don't support hover
+		if (!this.deviceSupportsHover()) return;
 		this.swup.triggerEvent('hoverLink', event);
 		this.preloadLink(event.delegateTarget);
 	};
 
 	onTouchStart = (event) => {
+		// Return early on devices that support hover
+		if (this.deviceSupportsHover()) return;
 		this.preloadLink(event.delegateTarget);
 	};
 
