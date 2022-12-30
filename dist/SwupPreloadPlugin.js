@@ -258,43 +258,30 @@ var PreloadPlugin = function (_Plugin) {
 
 		return _ret = (_temp = (_this = _possibleConstructorReturn(this, (_ref = PreloadPlugin.__proto__ || Object.getPrototypeOf(PreloadPlugin)).call.apply(_ref, [this].concat(args))), _this), _this.name = 'PreloadPlugin', _this.onContentReplaced = function () {
 			_this.swup.preloadPages();
-		}, _this.onMouseover = function (event) {
+		}, _this.onMouseOver = function (event) {
+			_this.swup.triggerEvent('hoverLink', event);
+			_this.preloadLink(event.delegateTarget);
+		}, _this.onTouchStart = function (event) {
+			_this.preloadLink(event.delegateTarget);
+		}, _this.preloadPage = function (url) {
 			var swup = _this.swup;
-			var linkEl = event.delegateTarget;
-			var link = new _helpers.Link(linkEl);
-
-			swup.triggerEvent('hoverLink', event);
-
-			// Bail early if the visit should be ignored by swup
-			if (_this.shouldIgnoreVisit(linkEl.href, { el: linkEl })) return;
-
-			// Bail early if there is already a preload running
-			if (swup.preloadPromise != null) return;
-
-			swup.preloadPromise = swup.preloadPage(link.getAddress());
-			swup.preloadPromise.route = link.getAddress();
-			swup.preloadPromise.finally(function () {
-				swup.preloadPromise = null;
-			});
-		}, _this.preloadPage = function (pathname) {
-			var swup = _this.swup;
-			var link = new _helpers.Link(pathname);
+			var route = new _helpers.Link(url).getAddress();
 
 			return new Promise(function (resolve, reject) {
 				// Resolve and return early if the page is already in the cache
-				if (swup.cache.exists(link.getAddress())) {
-					resolve(swup.cache.getPage(link.getAddress()));
+				if (swup.cache.exists(route)) {
+					resolve(swup.cache.getPage(route));
 					return;
 				}
 
 				(0, _helpers.fetch)({
-					url: link.getAddress(),
+					url: route,
 					headers: swup.options.requestHeaders
 				}, function (response) {
 					// Reject and bail early if the server responded with an error
 					if (response.status === 500) {
 						swup.triggerEvent('serverError');
-						reject(link.getAddress());
+						reject(route);
 						return;
 					}
 
@@ -303,12 +290,12 @@ var PreloadPlugin = function (_Plugin) {
 
 					// Reject and return early if something went wrong in `getPageData`
 					if (page == null) {
-						reject(link.getAddress());
+						reject(route);
 						return;
 					}
 
 					// Finally, prepare the page, store it in the cache, trigger an event and resolve
-					page.url = link.getAddress();
+					page.url = route;
 					swup.cache.cacheUrl(page);
 					swup.triggerEvent('pagePreloaded');
 					resolve(page);
@@ -338,8 +325,13 @@ var PreloadPlugin = function (_Plugin) {
 			swup.preloadPage = this.preloadPage;
 			swup.preloadPages = this.preloadPages;
 
-			// register mouseover handler
-			swup.delegatedListeners.mouseover = (0, _delegateIt2.default)(document.body, swup.options.linkSelector, 'mouseover', this.onMouseover.bind(this));
+			if (window.matchMedia('(hover: hover)').matches) {
+				// register mouseover handler
+				swup.delegatedListeners.mouseover = (0, _delegateIt2.default)(document.body, swup.options.linkSelector, 'mouseover', this.onMouseOver.bind(this));
+			} else {
+				// register touchstart handler
+				swup.delegatedListeners.touchstart = (0, _delegateIt2.default)(document.body, swup.options.linkSelector, 'touchstart', this.onTouchStart.bind(this), { capture: true });
+			}
 
 			// initial preload of links with [data-swup-preload] attr
 			swup.preloadPages();
@@ -366,6 +358,7 @@ var PreloadPlugin = function (_Plugin) {
 			swup.preloadPages = null;
 
 			swup.delegatedListeners.mouseover.destroy();
+			swup.delegatedListeners.touchstart.destroy();
 
 			swup.off('contentReplaced', this.onContentReplaced);
 		}
@@ -384,6 +377,23 @@ var PreloadPlugin = function (_Plugin) {
 				return this.swup.shouldIgnoreVisit(href, { el: el });
 			}
 			return false;
+		}
+	}, {
+		key: 'preloadLink',
+		value: function preloadLink(linkEl) {
+			var swup = this.swup;
+			var route = new _helpers.Link(linkEl).getAddress();
+
+			// Bail early if the visit should be ignored by swup
+			if (this.shouldIgnoreVisit(linkEl.href, { el: linkEl })) return;
+
+			// Bail early if there is already a preload running
+			if (swup.preloadPromise != null) return;
+
+			swup.preloadPromise = swup.preloadPage(route);
+			swup.preloadPromise.catch(function () {}).finally(function () {
+				swup.preloadPromise = null;
+			});
 		}
 	}]);
 
