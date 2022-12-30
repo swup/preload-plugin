@@ -80,16 +80,20 @@ export default class PreloadPlugin extends Plugin {
 		return false;
 	}
 
+	deviceSupportsHover() {
+		return window.matchMedia('(hover: hover)').matches;
+	}
+
 	onMouseOver = (event) => {
 		// Return early on devices that don't support hover
-		if (!window.matchMedia('(hover: hover)').matches) return;
+		if (!this.deviceSupportsHover()) return;
 		this.swup.triggerEvent('hoverLink', event);
 		this.preloadLink(event.delegateTarget);
 	};
 
 	onTouchStart = (event) => {
 		// Return early on devices that support hover
-		if (window.matchMedia('(hover: hover)').matches) return;
+		if (this.deviceSupportsHover()) return;
 		this.preloadLink(event.delegateTarget);
 	};
 
