@@ -260,12 +260,12 @@ var PreloadPlugin = function (_Plugin) {
 			_this.swup.preloadPages();
 		}, _this.onMouseOver = function (event) {
 			// Return early on devices that don't support hover
-			if (!window.matchMedia('(hover: hover)').matches) return;
+			if (!_this.deviceSupportsHover()) return;
 			_this.swup.triggerEvent('hoverLink', event);
 			_this.preloadLink(event.delegateTarget);
 		}, _this.onTouchStart = function (event) {
 			// Return early on devices that support hover
-			if (window.matchMedia('(hover: hover)').matches) return;
+			if (_this.deviceSupportsHover()) return;
 			_this.preloadLink(event.delegateTarget);
 		}, _this.preloadPage = function (url) {
 			var swup = _this.swup;
@@ -379,6 +379,11 @@ var PreloadPlugin = function (_Plugin) {
 				return this.swup.shouldIgnoreVisit(href, { el: el });
 			}
 			return false;
+		}
+	}, {
+		key: 'deviceSupportsHover',
+		value: function deviceSupportsHover() {
+			return window.matchMedia('(hover: hover)').matches;
 		}
 	}, {
 		key: 'preloadLink',
