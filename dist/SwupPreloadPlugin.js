@@ -357,8 +357,8 @@ var PreloadPlugin = function (_Plugin) {
 			swup.preloadPage = null;
 			swup.preloadPages = null;
 
-			swup.delegatedListeners.mouseover.destroy();
-			swup.delegatedListeners.touchstart.destroy();
+			if (swup.delegatedListeners.mouseover) swup.delegatedListeners.mouseover.destroy();
+			if (swup.delegatedListeners.touchstart) swup.delegatedListeners.touchstart.destroy();
 
 			swup.off('contentReplaced', this.onContentReplaced);
 		}
