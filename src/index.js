@@ -86,6 +86,8 @@ export default class PreloadPlugin extends Plugin {
 	}
 
 	onMouseEnter = (event) => {
+		// Make sure mouseenter is only fired once even on links with nested html
+		if (event.target !== event.delegateTarget) return;
 		// Return early on devices that don't support hover
 		if (!this.deviceSupportsHover()) return;
 		this.swup.triggerEvent('hoverLink', event);
