@@ -396,10 +396,17 @@ var PreloadPlugin = function (_Plugin) {
 			// Bail early if the visit should be ignored by swup
 			if (this.shouldIgnoreVisit(linkEl.href, { el: linkEl })) return;
 
+			// Bail early if the link points to the current page
+			if (route === (0, _helpers.getCurrentUrl)()) return;
+
+			// Bail early if the page is already in the cache
+			if (swup.cache.exists(route)) return;
+
 			// Bail early if there is already a preload running
 			if (swup.preloadPromise != null) return;
 
 			swup.preloadPromise = swup.preloadPage(route);
+			swup.preloadPromise.route = route;
 			swup.preloadPromise.catch(function () {}).finally(function () {
 				swup.preloadPromise = null;
 			});
