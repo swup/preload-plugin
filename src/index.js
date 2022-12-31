@@ -20,12 +20,13 @@ export default class PreloadPlugin extends Plugin {
 		swup.preloadPage = this.preloadPage;
 		swup.preloadPages = this.preloadPages;
 
-		// register mouseover handler
-		swup.delegatedListeners.mouseover = delegate(
+		// register mouseenter handler
+		swup.delegatedListeners.mouseenter = delegate(
 			document.body,
 			swup.options.linkSelector,
-			'mouseover',
-			this.onMouseOver.bind(this)
+			'mouseenter',
+			this.onMouseEnter.bind(this),
+			{ capture: true }
 		);
 
 		// register touchstart handler
@@ -60,7 +61,7 @@ export default class PreloadPlugin extends Plugin {
 		swup.preloadPage = null;
 		swup.preloadPages = null;
 
-		swup.delegatedListeners.mouseover.destroy();
+		swup.delegatedListeners.mouseenter.destroy();
 		swup.delegatedListeners.touchstart.destroy();
 
 		swup.off('contentReplaced', this.onContentReplaced);
@@ -84,7 +85,7 @@ export default class PreloadPlugin extends Plugin {
 		return window.matchMedia('(hover: hover)').matches;
 	}
 
-	onMouseOver = (event) => {
+	onMouseEnter = (event) => {
 		// Return early on devices that don't support hover
 		if (!this.deviceSupportsHover()) return;
 		this.swup.triggerEvent('hoverLink', event);
