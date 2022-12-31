@@ -20,12 +20,13 @@ export default class PreloadPlugin extends Plugin {
 		swup.preloadPage = this.preloadPage;
 		swup.preloadPages = this.preloadPages;
 
-		// register mouseover handler
-		swup.delegatedListeners.mouseover = delegate(
+		// register mouseenter handler
+		swup.delegatedListeners.mouseenter = delegate(
 			document.body,
 			swup.options.linkSelector,
-			'mouseover',
-			this.onMouseOver.bind(this)
+			'mouseenter',
+			this.onMouseEnter.bind(this),
+			{ capture: true }
 		);
 
 		// register touchstart handler
@@ -60,7 +61,7 @@ export default class PreloadPlugin extends Plugin {
 		swup.preloadPage = null;
 		swup.preloadPages = null;
 
-		swup.delegatedListeners.mouseover.destroy();
+		swup.delegatedListeners.mouseenter.destroy();
 		swup.delegatedListeners.touchstart.destroy();
 
 		swup.off('contentReplaced', this.onContentReplaced);
@@ -84,7 +85,9 @@ export default class PreloadPlugin extends Plugin {
 		return window.matchMedia('(hover: hover)').matches;
 	}
 
-	onMouseOver = (event) => {
+	onMouseEnter = (event) => {
+		// Make sure mouseenter is only fired once even on links with nested html
+		if (event.target !== event.delegateTarget) return;
 		// Return early on devices that don't support hover
 		if (!this.deviceSupportsHover()) return;
 		this.swup.triggerEvent('hoverLink', event);
@@ -104,10 +107,17 @@ export default class PreloadPlugin extends Plugin {
 		// Bail early if the visit should be ignored by swup
 		if (this.shouldIgnoreVisit(linkEl.href, { el: linkEl })) return;
 
+		// Bail early if the link points to the current page
+		if (route === getCurrentUrl()) return;
+
+		// Bail early if the page is already in the cache
+		if (swup.cache.exists(route)) return;
+
 		// Bail early if there is already a preload running
 		if (swup.preloadPromise != null) return;
 
 		swup.preloadPromise = swup.preloadPage(route);
+		swup.preloadPromise.route = route;
 		swup.preloadPromise
 			.catch(() => {})
 			.finally(() => {
