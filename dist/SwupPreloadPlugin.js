@@ -258,7 +258,9 @@ var PreloadPlugin = function (_Plugin) {
 
 		return _ret = (_temp = (_this = _possibleConstructorReturn(this, (_ref = PreloadPlugin.__proto__ || Object.getPrototypeOf(PreloadPlugin)).call.apply(_ref, [this].concat(args))), _this), _this.name = 'PreloadPlugin', _this.onContentReplaced = function () {
 			_this.swup.preloadPages();
-		}, _this.onMouseOver = function (event) {
+		}, _this.onMouseEnter = function (event) {
+			// Make sure mouseenter is only fired once even on links with nested html
+			if (event.target !== event.delegateTarget) return;
 			// Return early on devices that don't support hover
 			if (!_this.deviceSupportsHover()) return;
 			_this.swup.triggerEvent('hoverLink', event);
@@ -329,8 +331,8 @@ var PreloadPlugin = function (_Plugin) {
 			swup.preloadPage = this.preloadPage;
 			swup.preloadPages = this.preloadPages;
 
-			// register mouseover handler
-			swup.delegatedListeners.mouseover = (0, _delegateIt2.default)(document.body, swup.options.linkSelector, 'mouseover', this.onMouseOver.bind(this));
+			// register mouseenter handler
+			swup.delegatedListeners.mouseenter = (0, _delegateIt2.default)(document.body, swup.options.linkSelector, 'mouseenter', this.onMouseEnter.bind(this), { capture: true });
 
 			// register touchstart handler
 			swup.delegatedListeners.touchstart = (0, _delegateIt2.default)(document.body, swup.options.linkSelector, 'touchstart', this.onTouchStart.bind(this), { capture: true });
@@ -359,7 +361,7 @@ var PreloadPlugin = function (_Plugin) {
 			swup.preloadPage = null;
 			swup.preloadPages = null;
 
-			swup.delegatedListeners.mouseover.destroy();
+			swup.delegatedListeners.mouseenter.destroy();
 			swup.delegatedListeners.touchstart.destroy();
 
 			swup.off('contentReplaced', this.onContentReplaced);
@@ -394,10 +396,17 @@ var PreloadPlugin = function (_Plugin) {
 			// Bail early if the visit should be ignored by swup
 			if (this.shouldIgnoreVisit(linkEl.href, { el: linkEl })) return;
 
+			// Bail early if the link points to the current page
+			if (route === (0, _helpers.getCurrentUrl)()) return;
+
+			// Bail early if the page is already in the cache
+			if (swup.cache.exists(route)) return;
+
 			// Bail early if there is already a preload running
 			if (swup.preloadPromise != null) return;
 
 			swup.preloadPromise = swup.preloadPage(route);
+			swup.preloadPromise.route = route;
 			swup.preloadPromise.catch(function () {}).finally(function () {
 				swup.preloadPromise = null;
 			});
