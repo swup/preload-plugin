@@ -117,6 +117,7 @@ export default class PreloadPlugin extends Plugin {
 		if (swup.preloadPromise != null) return;
 
 		swup.preloadPromise = swup.preloadPage(route);
+		swup.preloadPromise.route = route;
 		swup.preloadPromise
 			.catch(() => {})
 			.finally(() => {
