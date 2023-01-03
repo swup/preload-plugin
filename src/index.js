@@ -153,7 +153,7 @@ export default class PreloadPlugin extends Plugin {
 					const page = swup.getPageData(response);
 
 					// Reject and return early if something went wrong in `getPageData`
-					if (page == null) {
+					if (!page || !page.blocks.length) {
 						reject(route);
 						return;
 					}
