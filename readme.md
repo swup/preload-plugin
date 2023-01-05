@@ -2,9 +2,9 @@
 
 Adds preloading support to [swup](https://github.com/swup/swup):
 
-- Any link element found in the DOM that matches `[data-swup-preload]` will automatically be preloaded.
-- On desktop, if moving the mouse over a link, the page the link points towards will immediately requested, speeding up perceived performance.
-- On mobile, the preload will start on `touchstart`, starting the preload ~80ms earlier than on `click`
+- Links with a `[data-swup-preload]` attribute will be preloaded automatically
+- Hovering a link on pointer devices will preload that link's URL, speeding up load time by a few 100ms
+- Touch devices will instead preload links at the start of touch events, giving a ~80ms speed-up
 - If there is already a preload running, the plugin won't start another one. This saves resources on the server.
 
 ## Installation
@@ -56,8 +56,6 @@ swup.preloadPages();
 ### Events
 
 - `pagePreloaded`: Fires once a page was preloaded:
-
-You can listen to those events like this:
 
 ```js
 swup.on('pagePreloaded', (page) => console.log('preloaded:' page));
