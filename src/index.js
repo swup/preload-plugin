@@ -22,8 +22,8 @@ export default class PreloadPlugin extends Plugin {
 		swup.preloadPages = this.preloadPages;
 
 		// replace page-fetch promise handler with custom method
-		this.originalSwupGetPageFetchPromise = swup.getPageFetchPromise.bind(swup);
-		swup.getPageFetchPromise = this.getPreloadedPageFetchPromise.bind(this);
+		this.originalSwupFetchPage = swup.fetchPage.bind(swup);
+		swup.fetchPage = this.fetchPreloadedPage.bind(this);
 
 		// register mouseenter handler
 		swup.delegatedListeners.mouseenter = swup.delegateEvent(
@@ -66,9 +66,9 @@ export default class PreloadPlugin extends Plugin {
 		swup.preloadPage = null;
 		swup.preloadPages = null;
 
-		if (this.originalSwupGetPageFetchPromise) {
-			swup.getPageFetchPromise = this.originalSwupGetPageFetchPromise;
-			this.originalSwupGetPageFetchPromise = null;
+		if (this.originalSwupFetchPage) {
+			swup.fetchPage = this.originalSwupFetchPage;
+			this.originalSwupFetchPage = null;
 		}
 
 		swup.delegatedListeners.mouseenter.destroy();
@@ -178,7 +178,7 @@ export default class PreloadPlugin extends Plugin {
 		});
 	};
 
-	getPreloadedPageFetchPromise(data) {
+	fetchPreloadedPage(data) {
 		const { url } = data;
 
 		if (this.preloadPromise && this.preloadPromise.url === url) {
