@@ -1,10 +1,11 @@
 import Plugin from '@swup/plugin';
-import delegate from 'delegate-it';
-import { queryAll } from 'swup/lib/utils';
-import { Link, getCurrentUrl, fetch } from 'swup/lib/helpers';
+import { queryAll } from 'swup/utils';
+import { Location, getCurrentUrl, fetch } from 'swup/helpers';
 
 export default class PreloadPlugin extends Plugin {
 	name = 'PreloadPlugin';
+
+	preloadPromise = null;
 
 	mount() {
 		const swup = this.swup;
@@ -20,9 +21,12 @@ export default class PreloadPlugin extends Plugin {
 		swup.preloadPage = this.preloadPage;
 		swup.preloadPages = this.preloadPages;
 
+		// replace page-fetch promise handler with custom method
+		this.originalSwupGetPageFetchPromise = swup.getPageFetchPromise.bind(swup);
+		swup.getPageFetchPromise = this.getPreloadedPageFetchPromise.bind(this);
+
 		// register mouseenter handler
-		swup.delegatedListeners.mouseenter = delegate(
-			document.body,
+		swup.delegatedListeners.mouseenter = swup.delegateEvent(
 			swup.options.linkSelector,
 			'mouseenter',
 			this.onMouseEnter.bind(this),
@@ -30,8 +34,7 @@ export default class PreloadPlugin extends Plugin {
 		);
 
 		// register touchstart handler
-		swup.delegatedListeners.touchstart = delegate(
-			document.body,
+		swup.delegatedListeners.touchstart = swup.delegateEvent(
 			swup.options.linkSelector,
 			'touchstart',
 			this.onTouchStart.bind(this),
@@ -55,11 +58,18 @@ export default class PreloadPlugin extends Plugin {
 			return;
 		}
 
+		this.preloadPromise = null;
+
 		swup._handlers.pagePreloaded = null;
 		swup._handlers.hoverLink = null;
 
 		swup.preloadPage = null;
 		swup.preloadPages = null;
+
+		if (this.originalSwupGetPageFetchPromise) {
+			swup.getPageFetchPromise = this.originalSwupGetPageFetchPromise;
+			this.originalSwupGetPageFetchPromise = null;
+		}
 
 		swup.delegatedListeners.mouseenter.destroy();
 		swup.delegatedListeners.touchstart.destroy();
@@ -75,10 +85,7 @@ export default class PreloadPlugin extends Plugin {
 	 * Apply swup.ignoreLink (will become available in swup@3)
 	 */
 	shouldIgnoreVisit(href, { el } = {}) {
-		if (typeof this.swup.shouldIgnoreVisit === 'function') {
-			return this.swup.shouldIgnoreVisit(href, { el });
-		}
-		return false;
+		return this.swup.shouldIgnoreVisit(href, { el });
 	}
 
 	deviceSupportsHover() {
@@ -102,69 +109,65 @@ export default class PreloadPlugin extends Plugin {
 
 	preloadLink(linkEl) {
 		const swup = this.swup;
-		const route = new Link(linkEl).getAddress();
+		const { url } = Location.fromElement(linkEl);
 
 		// Bail early if the visit should be ignored by swup
 		if (this.shouldIgnoreVisit(linkEl.href, { el: linkEl })) return;
 
 		// Bail early if the link points to the current page
-		if (route === getCurrentUrl()) return;
+		if (url === getCurrentUrl()) return;
 
 		// Bail early if the page is already in the cache
-		if (swup.cache.exists(route)) return;
+		if (swup.cache.exists(url)) return;
 
 		// Bail early if there is already a preload running
-		if (swup.preloadPromise != null) return;
+		if (this.preloadPromise != null) return;
 
-		swup.preloadPromise = swup.preloadPage(route);
-		swup.preloadPromise.route = route;
-		swup.preloadPromise
-			.catch(() => {})
-			.finally(() => {
-				swup.preloadPromise = null;
-			});
+		this.preloadPromise = this.preloadPage(url);
+		this.preloadPromise.url = url;
+		this.preloadPromise
+		.catch(() => {})
+		.finally(() => {
+			this.preloadPromise = null;
+		});
 	}
 
-	preloadPage = (url) => {
+	preloadPage = (pageUrl) => {
 		const swup = this.swup;
-		const route = new Link(url).getAddress();
+		const { url } = Location.fromUrl(pageUrl);
 
 		return new Promise((resolve, reject) => {
 			// Resolve and return early if the page is already in the cache
-			if (swup.cache.exists(route)) {
-				resolve(swup.cache.getPage(route));
+			if (swup.cache.exists(url)) {
+				resolve(swup.cache.getPage(url));
 				return;
 			}
 
-			fetch(
-				{
-					url: route,
-					headers: swup.options.requestHeaders
-				},
-				(response) => {
-					// Reject and bail early if the server responded with an error
-					if (response.status === 500) {
-						swup.triggerEvent('serverError');
-						reject(route);
-						return;
-					}
+			const headers = swup.options.requestHeaders;
 
-					// Parse the JSON data from the response
-					const page = swup.getPageData(response);
-
-					// Reject and return early if something went wrong in `getPageData`
-					if (!page || !page.blocks.length) {
-						reject(route);
-						return;
-					}
-
-					// Finally, prepare the page, store it in the cache, trigger an event and resolve
-					page.url = route;
-					swup.cache.cacheUrl(page);
-					swup.triggerEvent('pagePreloaded');
-					resolve(page);
+			fetch({ url, headers }, (response) => {
+				// Reject and bail early if the server responded with an error
+				if (response.status === 500) {
+					swup.triggerEvent('serverError');
+					reject(url);
+					return;
 				}
-			);
+
+				// Parse the JSON data from the response
+				const page = swup.getPageData(response);
+
+				// Reject and return early if something went wrong in `getPageData`
+				if (!page || !page.blocks.length) {
+					reject(url);
+					return;
+				}
+
+				// Finally, prepare the page, store it in the cache, trigger an event and resolve
+				page.url = url;
+				swup.cache.cacheUrl(page);
+				swup.triggerEvent('pagePreloaded');
+				resolve(page);
+			});
 		});
 	};
 
@@ -174,4 +177,14 @@ export default class PreloadPlugin extends Plugin {
 			this.swup.preloadPage(el.href);
 		});
 	};
+
+	getPreloadedPageFetchPromise(data) {
+		const { url } = data;
+
+		if (this.preloadPromise && this.preloadPromise.url === url) {
+			return this.preloadPromise;
+		} else {
+			return this.preloadPage(data);
+		}
+	}
 }
