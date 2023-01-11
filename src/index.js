@@ -126,10 +126,10 @@ export default class PreloadPlugin extends Plugin {
 		this.preloadPromise = this.preloadPage(url);
 		this.preloadPromise.url = url;
 		this.preloadPromise
-		.catch(() => {})
-		.finally(() => {
-			this.preloadPromise = null;
-		});
+			.catch(() => {})
+			.finally(() => {
+				this.preloadPromise = null;
+			});
 	}
 
 	preloadPage = (pageUrl) => {
@@ -163,10 +163,10 @@ export default class PreloadPlugin extends Plugin {
 				}
 
 				// Finally, prepare the page, store it in the cache, trigger an event and resolve
-				page.url = url;
-				swup.cache.cacheUrl(page);
+				const cacheablePageData = { ...page, url };
+				swup.cache.cacheUrl(cacheablePageData);
 				swup.triggerEvent('pagePreloaded');
-				resolve(page);
+				resolve(cacheablePageData);
 			});
 		});
 	};
@@ -184,7 +184,7 @@ export default class PreloadPlugin extends Plugin {
 		if (this.preloadPromise && this.preloadPromise.url === url) {
 			return this.preloadPromise;
 		} else {
-			return this.preloadPage(data);
+			return this.originalSwupFetchPage(data);
 		}
 	}
 }
