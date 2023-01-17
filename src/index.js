@@ -4,6 +4,8 @@ import { fetch, getCurrentUrl, Location, queryAll } from 'swup';
 export default class PreloadPlugin extends Plugin {
 	name = 'PreloadPlugin';
 
+	requires = { swup: '>=3.0.0' };
+
 	preloadPromise = null;
 
 	mount() {
