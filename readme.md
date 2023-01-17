@@ -9,27 +9,25 @@ Adds preloading support to [swup](https://github.com/swup/swup):
 
 ## Installation
 
-Install via npm
+Install the plugin from npm and import it into your bundle.
 
 ```bash
 npm install @swup/preload-plugin
 ```
 
-and import like this
-
-```shell
+```js
 import SwupPreloadPlugin from '@swup/preload-plugin';
 ```
 
-or included from the dist folder
+Or include the minified production file from a CDN:
 
 ```html
-<script src="./dist/SwupPreloadPlugin.js"></script>
+<script src="https://unpkg.com/@swup/preload-plugin@2"></script>
 ```
 
 ## Usage
 
-Add an instance of the plugin to the swup `options.plugins` array.
+To run this plugin, include an instance in the swup options.
 
 ```javascript
 const swup = new Swup({

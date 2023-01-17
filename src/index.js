@@ -1,6 +1,5 @@
 import Plugin from '@swup/plugin';
-import { queryAll } from 'swup/utils';
-import { Location, getCurrentUrl, fetch } from 'swup/helpers';
+import { fetch, getCurrentUrl, Location, queryAll } from 'swup';
 
 export default class PreloadPlugin extends Plugin {
 	name = 'PreloadPlugin';
