@@ -11,6 +11,6 @@ wiki-images files
 wiki-wishlist
 *.sublime-project
 *.sublime-workspace
+.editorconfig
 .idea
-lib
-/plugins
+/dist
