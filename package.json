@@ -44,11 +44,11 @@
   "dependencies": {
     "@swup/plugin": "^2.0.1"
   },
-  "prettier": "@swup/prettier-config",
   "devDependencies": {
     "swup": "^3.0.2"
   },
   "peerDependencies": {
     "swup": "^3.0.2"
-  }
+  },
+  "prettier": "@swup/prettier-config"
 }
