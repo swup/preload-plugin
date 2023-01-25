@@ -45,10 +45,10 @@
     "@swup/plugin": "^2.0.1"
   },
   "devDependencies": {
-    "swup": "^3.0.2"
+    "swup": "^3.0.0"
   },
   "peerDependencies": {
-    "swup": "^3.0.2"
+    "swup": "^3.0.0"
   },
   "prettier": "@swup/prettier-config"
 }
