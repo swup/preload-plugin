@@ -42,7 +42,7 @@
     "url": "https://github.com/swup/preload-plugin.git"
   },
   "dependencies": {
-    "@swup/plugin": "2.0.0-rc.3"
+    "@swup/plugin": "^2.0.1"
   },
   "devDependencies": {
     "swup": "3.0.0-rc.4"
