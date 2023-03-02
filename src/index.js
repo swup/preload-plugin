@@ -6,8 +6,16 @@ export default class PreloadPlugin extends Plugin {
 
 	requires = { swup: '>=3.0.0' };
 
-	maxConcurrentPreloads = 5;
 	preloadPromises = new Map();
+
+	options = {
+		maxConcurrentPreloads: 5
+	};
+
+	constructor(options = {}) {
+		super();
+		this.options = { ...this.options, ...options };
+	}
 
 	mount() {
 		const swup = this.swup;
@@ -126,7 +134,7 @@ export default class PreloadPlugin extends Plugin {
 		if (this.preloadPromises.has(url)) return;
 
 		// Bail early if there are more then the maximum allowed preloads running
-		if (this.preloadPromises.size >= this.maxConcurrentPreloads) return;
+		if (this.preloadPromises.size >= this.options.maxConcurrentPreloads) return;
 
 		const preloadPromise = this.preloadPage(url);
 		preloadPromise.url = url;
