@@ -36,9 +36,11 @@ const swup = new Swup({
 ```
 ## Options
 
-### maxConcurrentPreloads
+### throttle
 
-How many concurrent preloads should be allowed when rapidly hovering over multiple links. Decrease this to save server ressources.
+Type: `Number`, Default: `5`
+
+The *concurrency limit* for simultaneous requests when hovering links on pointer devices.
 
 ## Changes of the swup instance
 
