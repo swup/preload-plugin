@@ -9,7 +9,7 @@ export default class PreloadPlugin extends Plugin {
 	preloadPromises = new Map();
 
 	options = {
-		maxConcurrentPreloads: 5
+		throttle: 5
 	};
 
 	constructor(options = {}) {
@@ -133,8 +133,8 @@ export default class PreloadPlugin extends Plugin {
 		// Bail early if there is already a preload running
 		if (this.preloadPromises.has(url)) return;
 
-		// Bail early if there are more then the maximum allowed preloads running
-		if (this.preloadPromises.size >= this.options.maxConcurrentPreloads) return;
+		// Bail early if there are more then the maximum concurrent preloads running
+		if (this.preloadPromises.size >= this.options.throttle) return;
 
 		const preloadPromise = this.preloadPage(url);
 		preloadPromise.url = url;
