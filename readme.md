@@ -3,7 +3,7 @@
 Adds preloading support to [swup](https://github.com/swup/swup):
 
 - Links with a `[data-swup-preload]` attribute will be preloaded automatically
-- Hovering a link on pointer devices will preload that link's URL, speeding up load time by a few 100ms
+- Hovering a link on pointer devices will preload that link's URL, speeding up load time by a few 100ms. To save server resources, the number of simultaneous preload requests is limited to 5 by default.
 - Touch devices will instead preload links at the start of touch events, giving a ~80ms speed-up
 - If there is already a preload running, the plugin won't start another one. This saves resources on the server.
 
@@ -34,6 +34,13 @@ const swup = new Swup({
   plugins: [new SwupPreloadPlugin()]
 });
 ```
+## Options
+
+### throttle
+
+Type: `Number`, Default: `5`
+
+The *concurrency limit* for simultaneous requests when hovering links on pointer devices.
 
 ## Changes of the swup instance
 

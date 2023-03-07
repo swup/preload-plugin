@@ -6,7 +6,16 @@ export default class PreloadPlugin extends Plugin {
 
 	requires = { swup: '>=3.0.0' };
 
-	preloadPromise = null;
+	preloadPromises = new Map();
+
+	defaults = {
+		throttle: 5
+	};
+
+	constructor(options = {}) {
+		super();
+		this.options = { ...this.defaults, ...options };
+	}
 
 	mount() {
 		const swup = this.swup;
@@ -59,7 +68,7 @@ export default class PreloadPlugin extends Plugin {
 			return;
 		}
 
-		this.preloadPromise = null;
+		this.preloadPromises = null;
 
 		swup._handlers.pagePreloaded = null;
 		swup._handlers.hoverLink = null;
@@ -122,15 +131,19 @@ export default class PreloadPlugin extends Plugin {
 		if (swup.cache.exists(url)) return;
 
 		// Bail early if there is already a preload running
-		if (this.preloadPromise != null) return;
+		if (this.preloadPromises.has(url)) return;
 
-		this.preloadPromise = this.preloadPage(url);
-		this.preloadPromise.url = url;
-		this.preloadPromise
+		// Bail early if there are more then the maximum concurrent preloads running
+		if (this.preloadPromises.size >= this.options.throttle) return;
+
+		const preloadPromise = this.preloadPage(url);
+		preloadPromise.url = url;
+		preloadPromise
 			.catch(() => {})
 			.finally(() => {
-				this.preloadPromise = null;
+				this.preloadPromises.delete(url);
 			});
+		this.preloadPromises.set(url, preloadPromise);
 	}
 
 	preloadPage = (pageUrl) => {
@@ -182,10 +195,10 @@ export default class PreloadPlugin extends Plugin {
 	fetchPreloadedPage(data) {
 		const { url } = data;
 
-		if (this.preloadPromise && this.preloadPromise.url === url) {
-			return this.preloadPromise;
-		} else {
-			return this.originalSwupFetchPage(data);
-		}
+		const preloadPromise = this.preloadPromises.get(url);
+
+		if (preloadPromise != null) return preloadPromise;
+
+		return this.originalSwupFetchPage(data);
 	}
 }
