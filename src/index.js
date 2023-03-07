@@ -8,13 +8,13 @@ export default class PreloadPlugin extends Plugin {
 
 	preloadPromises = new Map();
 
-	options = {
+	defaults = {
 		throttle: 5
 	};
 
 	constructor(options = {}) {
 		super();
-		this.options = { ...this.options, ...options };
+		this.options = { ...this.defaults, ...options };
 	}
 
 	mount() {
