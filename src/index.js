@@ -179,7 +179,7 @@ export default class PreloadPlugin extends Plugin {
 				// Finally, prepare the page, store it in the cache, trigger an event and resolve
 				const cacheablePageData = { ...page, url };
 				swup.cache.cacheUrl(cacheablePageData);
-				swup.triggerEvent('pagePreloaded');
+				swup.triggerEvent('pagePreloaded', cacheablePageData);
 				resolve(cacheablePageData);
 			});
 		});
