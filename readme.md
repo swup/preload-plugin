@@ -34,6 +34,28 @@ const swup = new Swup({
   plugins: [new SwupPreloadPlugin()]
 });
 ```
+
+Hovering a link will now automatically preload it.
+
+```html
+<a href="/about">About</a> <!-- will preload when hovering -->
+```
+
+To preload specific links, mark them with the `data-swup-preload` attribute.
+
+```html
+<a href="/about" data-swup-preload>About</a>
+```
+
+To preload all links in a container, mark the container with `data-swup-preload-all`.
+
+```html
+<nav data-swup-preload-all>
+  <a href="/about">About</a>
+  <a href="/contact">Contact</a>
+</nav>
+```
+
 ## Options
 
 ### throttle
