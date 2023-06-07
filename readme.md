@@ -47,6 +47,15 @@ To preload specific links, mark them with the `data-swup-preload` attribute.
 <a href="/about" data-swup-preload>About</a>
 ```
 
+To preload all links in a container, mark the container with `data-swup-preload-all`.
+
+```html
+<nav data-swup-preload-all>
+  <a href="/about">About</a>
+  <a href="/contact">Contact</a>
+</nav>
+```
+
 ## Options
 
 ### throttle
