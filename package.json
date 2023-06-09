@@ -1,7 +1,7 @@
 {
   "name": "@swup/preload-plugin",
   "amdName": "SwupPreloadPlugin",
-  "version": "2.1.1",
+  "version": "2.2.0",
   "description": "Swup preload plugin.",
   "type": "module",
   "source": "src/index.js",
