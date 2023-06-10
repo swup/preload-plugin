@@ -56,9 +56,6 @@ export default class PreloadPlugin extends Plugin {
 
 		// do the same on every content replace
 		swup.on('contentReplaced', this.onContentReplaced);
-
-		// cache unmodified dom of initial/current page
-		swup.preloadPage(getCurrentUrl());
 	}
 
 	unmount() {
