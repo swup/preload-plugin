@@ -85,7 +85,7 @@ swup.preloadPages();
 - `pagePreloaded`: Fires once a page was preloaded:
 
 ```js
-swup.on('pagePreloaded', (page) => console.log('preloaded:' page));
+swup.on('pagePreloaded', (page) => console.log('preloaded:', page));
 ```
 
 - `hoverLink`: fires every time a link is being hovered:
