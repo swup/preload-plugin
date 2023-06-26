@@ -9,7 +9,8 @@ export default class PreloadPlugin extends Plugin {
 	preloadPromises = new Map();
 
 	defaults = {
-		throttle: 5
+		throttle: 5,
+		preloadInitialPage: true
 	};
 
 	constructor(options = {}) {
@@ -54,8 +55,10 @@ export default class PreloadPlugin extends Plugin {
 		// initial preload of links with [data-swup-preload] attr
 		swup.preloadPages();
 
-		// do the same on every content replace
-		swup.on('contentReplaced', this.onContentReplaced);
+		// cache unmodified dom of initial/current page
+		if (this.options.preloadInitialPage) {
+            swup.preloadPage(getCurrentUrl());
+        }
 	}
 
 	unmount() {
