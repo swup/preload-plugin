@@ -64,6 +64,13 @@ Type: `Number`, Default: `5`
 
 The *concurrency limit* for simultaneous requests when hovering links on pointer devices.
 
+### preloadInitialPage
+
+Type: `Boolean`, Default: `True`
+
+The reasoning behind preloading the initial page is to allow instant back-button navigation after you've navigated away from it.
+In some instances this can cause issues, so you can disable it by setting this option to `false`.
+
 ## Changes of the swup instance
 
 ### Methods
