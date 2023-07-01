@@ -1,8 +1,8 @@
 import Plugin from '@swup/plugin';
 import { fetch, getCurrentUrl, Location, queryAll } from 'swup';
 
-export default class PreloadPlugin extends Plugin {
-	name = 'PreloadPlugin';
+export default class SwupPreloadPlugin extends Plugin {
+	name = 'SwupPreloadPlugin';
 
 	requires = { swup: '>=3.0.0' };
 
