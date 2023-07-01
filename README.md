@@ -1,11 +1,10 @@
 # Swup Preload plugin
 
-Adds preloading support to [swup](https://github.com/swup/swup):
+A [swup](https://swup.js.org) plugin for preloading pages and faster navigation.
 
-- Links with a `[data-swup-preload]` attribute will be preloaded automatically
+- Links with a `data-swup-preload` attribute will be preloaded automatically
 - Hovering a link on pointer devices will preload that link's URL, speeding up load time by a few 100ms. To save server resources, the number of simultaneous preload requests is limited to 5 by default.
 - Touch devices will instead preload links at the start of touch events, giving a ~80ms speed-up
-- If there is already a preload running, the plugin won't start another one. This saves resources on the server.
 
 ## Installation
 
@@ -22,7 +21,7 @@ import SwupPreloadPlugin from '@swup/preload-plugin';
 Or include the minified production file from a CDN:
 
 ```html
-<script src="https://unpkg.com/@swup/preload-plugin@2"></script>
+<script src="https://unpkg.com/@swup/preload-plugin@3"></script>
 ```
 
 ## Usage
@@ -35,7 +34,9 @@ const swup = new Swup({
 });
 ```
 
-Hovering a link will now automatically preload it.
+## Preloading
+
+Hovering a link will automatically preload it.
 
 ```html
 <a href="/about">About</a> <!-- will preload when hovering -->
@@ -71,32 +72,42 @@ Type: `Boolean`, Default: `True`
 The reasoning behind preloading the initial page is to allow instant back-button navigation after you've navigated away from it.
 In some instances this can cause issues, so you can disable it by setting this option to `false`.
 
-## Changes of the swup instance
+## Methods on the swup instance
 
-### Methods
+The plugin adds two methods for preloading pages to the swup instance.
 
-- `preloadPage`: Accepts a URL path and returns a promise describing the loading of the page:
+### preloadPage
+
+Preload a single URL. Returns a promise that resolves when the pages was preloaded.
 
 ```js
-const preloadPromise = swup.preloadPage('/path/to/my/page.html');
+const preloadPromise = swup.preloadPage('/path/to/page');
 ```
 
-- `preloadPages`: Scans the DOM for links with the attribute `[data-swup-preload]` and calls `preloadPage` for each URL:
+### preloadPages
+
+Scan the DOM for links with the attribute `[data-swup-preload]` and call `preloadPage` for each URL:
 
 ```js
 swup.preloadPages();
 ```
 
-### Events
+## Hooks
 
-- `pagePreloaded`: Fires once a page was preloaded:
+The plugin creates two new hooks:
+
+### pagePreloaded
+
+Fires when a page was preloaded.
 
 ```js
-swup.on('pagePreloaded', (page) => console.log('preloaded:', page));
+swup.hooks.on('pagePreloaded', (context, { page }) => console.log('preloaded:', page));
 ```
 
-- `hoverLink`: fires every time a link is being hovered:
+### hoverLink
+
+Fires every time a link is hovered.
 
 ```js
-swup.on('hoverLink', (event) => console.log('link hovered:', event));
+swup.hooks.on('hoverLink', (context, { el }) => console.log('link hovered:', el));
 ```
