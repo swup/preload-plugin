@@ -2,7 +2,7 @@
   "name": "@swup/preload-plugin",
   "amdName": "SwupPreloadPlugin",
   "version": "2.3.0",
-  "description": "Swup preload plugin.",
+  "description": "A swup plugin for preloading pages and faster navigation",
   "type": "module",
   "source": "src/index.js",
   "main": "./dist/index.cjs",
