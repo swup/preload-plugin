@@ -124,7 +124,7 @@ export default class SwupPreloadPlugin extends Plugin {
 		if (url === getCurrentUrl()) return;
 
 		// Bail early if the page is already in the cache
-		if (swup.cache.has(url)) return;
+		if (this.swup.cache.has(url)) return;
 
 		// Bail early if there is already a preload running
 		if (this.preloadPromises.has(url)) return;
