@@ -55,7 +55,7 @@ export default class SwupPreloadPlugin extends Plugin {
 		swup.hooks.on('replaceContent', this.onPageView);
 
 		// inject custom promise whenever a page is requested
-		swup.hooks.before('loadPage', this.onLoadPage);
+		swup.hooks.replace('loadPage', this.onLoadPage);
 
 		// cache unmodified dom of initial/current page
 		if (this.options.preloadInitialPage) {
@@ -86,9 +86,12 @@ export default class SwupPreloadPlugin extends Plugin {
 		this.swup.preloadPages();
 	};
 
-	onLoadPage = (context, args) => {
-		if (this.preloadPromises.has(args.url)) {
-			args.page = this.preloadPromises.get(args.url);
+	onLoadPage = (context, args, originalHandler) => {
+		const { url } = context.to;
+		if (this.preloadPromises.has(url)) {
+			return this.preloadPromises.get(url);
+		} else {
+			return originalHandler(context, args);
 		}
 	};
 
