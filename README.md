@@ -1,4 +1,4 @@
-# Swup Preload plugin
+# Swup Preload Plugin
 
 A [swup](https://swup.js.org) plugin for preloading pages and faster navigation.
 
