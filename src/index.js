@@ -26,8 +26,8 @@ export default class SwupPreloadPlugin extends Plugin {
 			return;
 		}
 
-		swup.hooks.create('pagePreloaded');
-		swup.hooks.create('hoverLink');
+		swup.hooks.create('page:preload');
+		swup.hooks.create('link:hover');
 
 		swup.preloadPage = this.preloadPage;
 		swup.preloadPages = this.preloadPages;
@@ -106,7 +106,7 @@ export default class SwupPreloadPlugin extends Plugin {
 		if (!this.deviceSupportsHover()) return;
 
 		const el = event.delegateTarget;
-		this.swup.hooks.trigger('hoverLink', { el, event });
+		this.swup.hooks.trigger('link:hover', { el, event });
 		this.preloadLink(el);
 	};
 
@@ -146,7 +146,7 @@ export default class SwupPreloadPlugin extends Plugin {
 
 	preloadPage = async (url) => {
 		const page = await this.swup.fetchPage(url, { triggerHooks: false });
-		await this.swup.hooks.trigger('pagePreloaded', { page });
+		await this.swup.hooks.trigger('page:preload', { page });
 		return page;
 	};
 
