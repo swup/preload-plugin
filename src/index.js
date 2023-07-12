@@ -49,7 +49,7 @@ export default class SwupPreloadPlugin extends Plugin {
 		);
 
 		// initial preload of links with [data-swup-preload] attr
-		swup.preloadAll();
+		this.preloadAll();
 
 		// do the same whenever a new page is loaded
 		swup.hooks.on('page:view', this.onPageView);
@@ -59,7 +59,7 @@ export default class SwupPreloadPlugin extends Plugin {
 
 		// cache unmodified dom of initial/current page
 		if (this.options.preloadInitialPage) {
-			swup.preload(getCurrentUrl());
+			this.preload(getCurrentUrl());
 		}
 	}
 
