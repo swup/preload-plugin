@@ -76,20 +76,20 @@ In some instances this can cause issues, so you can disable it by setting this o
 
 The plugin adds two methods for preloading pages to the swup instance.
 
-### preloadPage
+### preload
 
 Preload a single URL. Returns a promise that resolves when the pages was preloaded.
 
 ```js
-const preloadPromise = swup.preloadPage('/path/to/page');
+const preloadPromise = swup.preload('/path/to/page');
 ```
 
-### preloadPages
+### preloadAll
 
-Scan the DOM for links with the attribute `[data-swup-preload]` and call `preloadPage` for each URL:
+Scan the DOM for links with the attribute `[data-swup-preload]` and call `preload` for each URL:
 
 ```js
-swup.preloadPages();
+swup.preloadAll();
 ```
 
 ## Hooks

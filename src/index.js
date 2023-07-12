@@ -29,8 +29,8 @@ export default class SwupPreloadPlugin extends Plugin {
 		swup.hooks.create('page:preload');
 		swup.hooks.create('link:hover');
 
-		swup.preloadPage = this.preloadPage;
-		swup.preloadPages = this.preloadPages;
+		swup.preload = this.preload;
+		swup.preloadAll = this.preloadAll;
 
 		// register mouseenter handler
 		this.mouseEnterDelegate = swup.delegateEvent(
@@ -49,7 +49,7 @@ export default class SwupPreloadPlugin extends Plugin {
 		);
 
 		// initial preload of links with [data-swup-preload] attr
-		swup.preloadPages();
+		swup.preloadAll();
 
 		// do the same whenever a new page is loaded
 		swup.hooks.on('replaceContent', this.onPageView);
@@ -59,7 +59,7 @@ export default class SwupPreloadPlugin extends Plugin {
 
 		// cache unmodified dom of initial/current page
 		if (this.options.preloadInitialPage) {
-			swup.preloadPage(getCurrentUrl());
+			swup.preload(getCurrentUrl());
 		}
 	}
 
@@ -72,8 +72,8 @@ export default class SwupPreloadPlugin extends Plugin {
 
 		this.preloadPromises.clear();
 
-		swup.preloadPage = null;
-		swup.preloadPages = null;
+		swup.preload = null;
+		swup.preloadAll = null;
 
 		this.mouseEnterDelegate.destroy();
 		this.touchStartDelegate.destroy();
@@ -83,7 +83,7 @@ export default class SwupPreloadPlugin extends Plugin {
 	}
 
 	onPageView = () => {
-		this.swup.preloadPages();
+		this.swup.preloadAll();
 	};
 
 	onLoadPage = (context, args, originalHandler) => {
@@ -135,7 +135,7 @@ export default class SwupPreloadPlugin extends Plugin {
 		// Bail early if there are more then the maximum concurrent preloads running
 		if (this.preloadPromises.size >= this.options.throttle) return;
 
-		const preloadPromise = this.preloadPage(url);
+		const preloadPromise = this.preload(url);
 		preloadPromise
 			.catch(() => {})
 			.finally(() => {
@@ -144,16 +144,16 @@ export default class SwupPreloadPlugin extends Plugin {
 		this.preloadPromises.set(url, preloadPromise);
 	}
 
-	preloadPage = async (url) => {
+	preload = async (url) => {
 		const page = await this.swup.fetchPage(url, { triggerHooks: false });
 		await this.swup.hooks.trigger('page:preload', { page });
 		return page;
 	};
 
-	preloadPages = () => {
+	preloadAll = () => {
 		queryAll('[data-swup-preload], [data-swup-preload-all] a').forEach((el) => {
 			if (this.swup.shouldIgnoreVisit(el.href, { el })) return;
-			this.swup.preloadPage(el.href);
+			this.swup.preload(el.href);
 		});
 	};
 }
