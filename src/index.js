@@ -106,7 +106,7 @@ export default class SwupPreloadPlugin extends Plugin {
 		if (!this.deviceSupportsHover()) return;
 
 		const el = event.delegateTarget;
-		this.swup.hooks.trigger('link:hover', { el, event });
+		this.swup.hooks.triggerSync('link:hover', { el, event });
 		this.preloadLink(el);
 	};
 
