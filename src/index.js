@@ -52,10 +52,10 @@ export default class SwupPreloadPlugin extends Plugin {
 		swup.preloadAll();
 
 		// do the same whenever a new page is loaded
-		swup.hooks.on('replaceContent', this.onPageView);
+		swup.hooks.on('content:replace', this.onPageView);
 
 		// inject custom promise whenever a page is requested
-		swup.hooks.replace('loadPage', this.onLoadPage);
+		swup.hooks.replace('page:request', this.onRequestPage);
 
 		// cache unmodified dom of initial/current page
 		if (this.options.preloadInitialPage) {
@@ -78,20 +78,20 @@ export default class SwupPreloadPlugin extends Plugin {
 		this.mouseEnterDelegate.destroy();
 		this.touchStartDelegate.destroy();
 
-		swup.hooks.off('replaceContent', this.onPageView);
-		swup.hooks.off('loadPage', this.onLoadPage);
+		swup.hooks.off('content:replace', this.onPageView);
+		swup.hooks.off('page:request', this.onRequestPage);
 	}
 
 	onPageView = () => {
 		this.swup.preloadAll();
 	};
 
-	onLoadPage = (context, args, originalHandler) => {
+	onRequestPage = (context, args, defaultHandler) => {
 		const { url } = context.to;
 		if (this.preloadPromises.has(url)) {
 			return this.preloadPromises.get(url);
 		} else {
-			return originalHandler(context, args);
+			return defaultHandler(context, args);
 		}
 	};
 
