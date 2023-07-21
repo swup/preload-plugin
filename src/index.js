@@ -6,12 +6,12 @@ export default class SwupPreloadPlugin extends Plugin {
 
 	requires = { swup: '>=4' };
 
-	preloadPromises = new Map();
-
 	defaults = {
 		throttle: 5,
 		preloadInitialPage: true
 	};
+
+	preloadPromises = new Map();
 
 	constructor(options = {}) {
 		super();
@@ -48,14 +48,14 @@ export default class SwupPreloadPlugin extends Plugin {
 			{ capture: true }
 		);
 
-		// initial preload of links with [data-swup-preload] attr
-		this.preloadAll();
-
-		// do the same whenever a new page is loaded
-		swup.hooks.on('page:view', this.onPageView);
+		// preload links with [data-swup-preload] attr after page views
+		this.on('page:view', this.onPageView);
 
 		// inject custom promise whenever a page is requested
-		swup.hooks.replace('page:request', this.onPageRequest);
+		this.replace('page:request', this.onPageRequest);
+
+		// initial preload of links with [data-swup-preload] attr
+		this.preloadAll();
 
 		// cache unmodified dom of initial/current page
 		if (this.options.preloadInitialPage) {
@@ -64,42 +64,33 @@ export default class SwupPreloadPlugin extends Plugin {
 	}
 
 	unmount() {
-		const swup = this.swup;
-
-		if (!swup.options.cache) {
-			return;
-		}
+		this.swup.preload = null;
+		this.swup.preloadAll = null;
 
 		this.preloadPromises.clear();
 
-		swup.preload = null;
-		swup.preloadAll = null;
-
-		this.mouseEnterDelegate.destroy();
-		this.touchStartDelegate.destroy();
-
-		swup.hooks.off('page:view', this.onPageView);
-		swup.hooks.off('page:request', this.onPageRequest);
+		this.mouseEnterDelegate?.destroy();
+		this.touchStartDelegate?.destroy();
 	}
 
-	onPageView = () => {
+	onPageView() {
 		this.preloadAll();
-	};
+	}
 
-	onPageRequest = (context, args, defaultHandler) => {
-		const { url } = context.to;
+	onPageRequest(visit, args, defaultHandler) {
+		const { url } = visit.to;
 		if (this.preloadPromises.has(url)) {
 			return this.preloadPromises.get(url);
 		} else {
-			return defaultHandler(context, args);
+			return defaultHandler(visit, args);
 		}
-	};
+	}
 
 	deviceSupportsHover() {
 		return window.matchMedia('(hover: hover)').matches;
 	}
 
-	onMouseEnter = async (event) => {
+	async onMouseEnter(event) {
 		// Make sure mouseenter is only fired once even on links with nested html
 		if (event.target !== event.delegateTarget) return;
 		// Return early on devices that don't support hover
@@ -110,7 +101,7 @@ export default class SwupPreloadPlugin extends Plugin {
 		this.preloadLink(el);
 	};
 
-	onTouchStart = (event) => {
+	onTouchStart(event) {
 		// Return early on devices that support hover
 		if (this.deviceSupportsHover()) return;
 
