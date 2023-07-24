@@ -136,7 +136,7 @@ export default class SwupPreloadPlugin extends Plugin {
 	}
 
 	preload = async (url) => {
-		const page = await this.swup.fetchPage(url, { triggerHooks: false });
+		const page = await this.swup.fetchPage(url);
 		await this.swup.hooks.trigger('page:preload', { page });
 		return page;
 	};
