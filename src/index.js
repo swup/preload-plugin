@@ -51,8 +51,8 @@ export default class SwupPreloadPlugin extends Plugin {
 		// preload links with [data-swup-preload] attr after page views
 		this.on('page:view', this.onPageView);
 
-		// inject custom promise whenever a page is requested
-		this.replace('page:request', this.onPageRequest);
+		// inject custom promise whenever a page is loaded
+		this.replace('page:load', this.onPageLoad);
 
 		// initial preload of links with [data-swup-preload] attr
 		this.preloadAll();
@@ -77,7 +77,7 @@ export default class SwupPreloadPlugin extends Plugin {
 		this.preloadAll();
 	}
 
-	onPageRequest(visit, args, defaultHandler) {
+	onPageLoad(visit, args, defaultHandler) {
 		const { url } = visit.to;
 		if (this.preloadPromises.has(url)) {
 			return this.preloadPromises.get(url);
