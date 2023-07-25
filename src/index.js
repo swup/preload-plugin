@@ -30,7 +30,7 @@ export default class SwupPreloadPlugin extends Plugin {
 		swup.hooks.create('link:hover');
 
 		swup.preload = this.preload;
-		swup.preloadAll = this.preloadAll;
+		swup.preloadLinks = this.preloadLinks;
 
 		// register mouseenter handler
 		this.mouseEnterDelegate = swup.delegateEvent(
@@ -55,7 +55,7 @@ export default class SwupPreloadPlugin extends Plugin {
 		this.replace('page:load', this.onPageLoad);
 
 		// initial preload of links with [data-swup-preload] attr
-		this.preloadAll();
+		this.preloadLinks();
 
 		// cache unmodified dom of initial/current page
 		if (this.options.preloadInitialPage) {
@@ -65,7 +65,7 @@ export default class SwupPreloadPlugin extends Plugin {
 
 	unmount() {
 		this.swup.preload = null;
-		this.swup.preloadAll = null;
+		this.swup.preloadLinks = null;
 
 		this.preloadPromises.clear();
 
@@ -74,7 +74,7 @@ export default class SwupPreloadPlugin extends Plugin {
 	}
 
 	onPageView() {
-		this.preloadAll();
+		this.preloadLinks();
 	}
 
 	onPageLoad(visit, args, defaultHandler) {
@@ -141,7 +141,7 @@ export default class SwupPreloadPlugin extends Plugin {
 		return page;
 	};
 
-	preloadAll = () => {
+	preloadLinks = () => {
 		queryAll('[data-swup-preload], [data-swup-preload-all] a').forEach((el) => {
 			if (this.swup.shouldIgnoreVisit(el.href, { el })) return;
 			this.swup.preload(el.href);
