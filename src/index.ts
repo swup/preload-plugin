@@ -3,13 +3,13 @@ import { getCurrentUrl, Handler, Location } from 'swup';
 import type { DelegateEvent, DelegateEventHandler, DelegateEventUnsubscribe, PageData } from 'swup';
 
 declare module 'swup' {
+	export class Swup {
+		preload?: (url: string) => Promise<PageData>;
+		preloadLinks?: () => void;
+	}
 	export interface HookDefinitions {
 		'link:hover': { el: HTMLAnchorElement; event: DelegateEvent };
 		'page:preload': { page: PageData };
-	}
-	export class Swup {
-		preload: (url: string) => Promise<PageData>;
-		preloadLinks: () => void;
 	}
 }
 
