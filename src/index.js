@@ -6,12 +6,12 @@ export default class SwupPreloadPlugin extends Plugin {
 
 	requires = { swup: '>=4' };
 
-	preloadPromises = new Map();
-
 	defaults = {
 		throttle: 5,
 		preloadInitialPage: true
 	};
+
+	preloadPromises = new Map();
 
 	constructor(options = {}) {
 		super();
@@ -30,7 +30,7 @@ export default class SwupPreloadPlugin extends Plugin {
 		swup.hooks.create('link:hover');
 
 		swup.preload = this.preload;
-		swup.preloadAll = this.preloadAll;
+		swup.preloadLinks = this.preloadLinks;
 
 		// register mouseenter handler
 		this.mouseEnterDelegate = swup.delegateEvent(
@@ -48,14 +48,14 @@ export default class SwupPreloadPlugin extends Plugin {
 			{ capture: true }
 		);
 
+		// preload links with [data-swup-preload] attr after page views
+		this.on('page:view', this.onPageView);
+
+		// inject custom promise whenever a page is loaded
+		this.replace('page:load', this.onPageLoad);
+
 		// initial preload of links with [data-swup-preload] attr
-		this.preloadAll();
-
-		// do the same whenever a new page is loaded
-		swup.hooks.on('page:view', this.onPageView);
-
-		// inject custom promise whenever a page is requested
-		swup.hooks.replace('page:request', this.onPageRequest);
+		this.preloadLinks();
 
 		// cache unmodified dom of initial/current page
 		if (this.options.preloadInitialPage) {
@@ -64,53 +64,44 @@ export default class SwupPreloadPlugin extends Plugin {
 	}
 
 	unmount() {
-		const swup = this.swup;
-
-		if (!swup.options.cache) {
-			return;
-		}
+		this.swup.preload = null;
+		this.swup.preloadLinks = null;
 
 		this.preloadPromises.clear();
 
-		swup.preload = null;
-		swup.preloadAll = null;
-
-		this.mouseEnterDelegate.destroy();
-		this.touchStartDelegate.destroy();
-
-		swup.hooks.off('page:view', this.onPageView);
-		swup.hooks.off('page:request', this.onPageRequest);
+		this.mouseEnterDelegate?.destroy();
+		this.touchStartDelegate?.destroy();
 	}
 
-	onPageView = () => {
-		this.preloadAll();
-	};
+	onPageView() {
+		this.preloadLinks();
+	}
 
-	onPageRequest = (context, args, defaultHandler) => {
-		const { url } = context.to;
+	onPageLoad(visit, args, defaultHandler) {
+		const { url } = visit.to;
 		if (this.preloadPromises.has(url)) {
 			return this.preloadPromises.get(url);
 		} else {
-			return defaultHandler(context, args);
+			return defaultHandler(visit, args);
 		}
-	};
+	}
 
 	deviceSupportsHover() {
 		return window.matchMedia('(hover: hover)').matches;
 	}
 
-	onMouseEnter = async (event) => {
+	async onMouseEnter(event) {
 		// Make sure mouseenter is only fired once even on links with nested html
 		if (event.target !== event.delegateTarget) return;
 		// Return early on devices that don't support hover
 		if (!this.deviceSupportsHover()) return;
 
 		const el = event.delegateTarget;
-		this.swup.hooks.triggerSync('link:hover', { el, event });
+		this.swup.hooks.callSync('link:hover', { el, event });
 		this.preloadLink(el);
 	};
 
-	onTouchStart = (event) => {
+	onTouchStart(event) {
 		// Return early on devices that support hover
 		if (this.deviceSupportsHover()) return;
 
@@ -145,12 +136,12 @@ export default class SwupPreloadPlugin extends Plugin {
 	}
 
 	preload = async (url) => {
-		const page = await this.swup.fetchPage(url, { triggerHooks: false });
-		await this.swup.hooks.trigger('page:preload', { page });
+		const page = await this.swup.fetchPage(url);
+		await this.swup.hooks.call('page:preload', { page });
 		return page;
 	};
 
-	preloadAll = () => {
+	preloadLinks = () => {
 		queryAll('[data-swup-preload], [data-swup-preload-all] a').forEach((el) => {
 			if (this.swup.shouldIgnoreVisit(el.href, { el })) return;
 			this.swup.preload(el.href);

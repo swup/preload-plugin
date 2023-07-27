@@ -2,8 +2,9 @@
 
 <!-- ## [Unreleased] -->
 
-## [3.0.0] - 2023-07
+## [3.0.0] - 2023-07-26
 
+- Renamed preload method: `swup.preload(url)`
 - Update for swup 4 compatibility
 
 ## [2.3.0] - 2023-06-27

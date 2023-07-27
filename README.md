@@ -81,15 +81,15 @@ The plugin adds two methods for preloading pages to the swup instance.
 Preload a single URL. Returns a promise that resolves when the pages was preloaded.
 
 ```js
-const preloadPromise = swup.preload('/path/to/page');
+await swup.preload('/path/to/page');
 ```
 
-### preloadAll
+### preloadLinks
 
 Scan the DOM for links with the attribute `[data-swup-preload]` and call `preload` for each URL:
 
 ```js
-swup.preloadAll();
+swup.preloadLinks();
 ```
 
 ## Hooks
