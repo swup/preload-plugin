@@ -94,14 +94,16 @@ swup.preloadLinks();
 
 ## Hooks
 
-The plugin creates two new hooks:
+The plugin creates two new hooks.
+
+> **Note** The visit object might be `undefined` or already settled for these hooks
 
 ### page:preload
 
 Fires when a page was preloaded.
 
 ```js
-swup.hooks.on('page:preload', (context, { page }) => console.log('preloaded:', page));
+swup.hooks.on('page:preload', (_visit, { page }) => console.log('preloaded:', page));
 ```
 
 ### link:hover
@@ -109,5 +111,5 @@ swup.hooks.on('page:preload', (context, { page }) => console.log('preloaded:', p
 Fires every time a link is hovered.
 
 ```js
-swup.hooks.on('link:hover', (context, { el }) => console.log('link hovered:', el));
+swup.hooks.on('link:hover', (_visit, { el }) => console.log('link hovered:', el));
 ```
