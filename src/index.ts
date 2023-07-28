@@ -3,7 +3,7 @@ import { getCurrentUrl, Handler, Location } from 'swup';
 import type { DelegateEvent, DelegateEventHandler, DelegateEventUnsubscribe, PageData } from 'swup';
 
 declare module 'swup' {
-	export class Swup {
+	export interface Swup {
 		preload?: (url: string) => Promise<PageData>;
 		preloadLinks?: () => void;
 	}
