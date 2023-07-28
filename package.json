@@ -4,7 +4,7 @@
   "version": "3.0.0",
   "description": "A swup plugin for preloading pages and faster navigation",
   "type": "module",
-  "source": "src/index.js",
+  "source": "src/index.ts",
   "main": "./dist/index.cjs",
   "module": "./dist/index.module.js",
   "exports": "./dist/index.modern.js",
