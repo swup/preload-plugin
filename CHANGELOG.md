@@ -4,7 +4,7 @@
 
 ## [3.1.2] - 2023-07-29
 
-- Make sure only local links are being preloaded
+- Fix regression: Make sure only local links are being preloaded
 
 ## [3.1.1] - 2023-07-28
 
