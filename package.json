@@ -1,7 +1,7 @@
 {
   "name": "@swup/preload-plugin",
   "amdName": "SwupPreloadPlugin",
-  "version": "3.1.1",
+  "version": "3.1.2",
   "description": "A swup plugin for preloading pages and faster navigation",
   "type": "module",
   "source": "src/index.ts",
