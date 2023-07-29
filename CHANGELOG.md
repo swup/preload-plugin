@@ -2,6 +2,15 @@
 
 <!-- ## [Unreleased] -->
 
+## [3.1.1] - 2023-07-28
+
+- Make the type declarations discoverable from package.json
+
+## [3.1.0] - 2023-07-28
+
+- Port to TypeScript
+- Augmentation of plugin methods and hooks injected into swup
+
 ## [3.0.0] - 2023-07-26
 
 - Renamed preload method: `swup.preload(url)`
@@ -62,8 +71,10 @@
 
 - Initial release
 
-[Unreleased]: https://github.com/swup/preload-plugin/compare/3.0.0...HEAD
+[Unreleased]: https://github.com/swup/preload-plugin/compare/3.1.1...HEAD
 
+[3.1.1]: https://github.com/swup/preload-plugin/releases/tag/3.1.1
+[3.1.0]: https://github.com/swup/preload-plugin/releases/tag/3.1.0
 [3.0.0]: https://github.com/swup/preload-plugin/releases/tag/3.0.0
 [2.3.0]: https://github.com/swup/preload-plugin/releases/tag/2.3.0
 [2.2.0]: https://github.com/swup/preload-plugin/releases/tag/2.2.0
