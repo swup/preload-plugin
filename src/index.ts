@@ -135,10 +135,10 @@ export default class SwupPreloadPlugin extends Plugin {
 	};
 
 	preloadLink(el: HTMLAnchorElement) {
-		const { url } = Location.fromElement(el);
+		const { url, href } = Location.fromElement(el);
 
 		// Bail early if the visit should be ignored by swup
-		if (this.swup.shouldIgnoreVisit(el.href, { el })) return;
+		if (this.swup.shouldIgnoreVisit(href, { el })) return;
 
 		// Bail early if the link points to the current page
 		if (url === getCurrentUrl()) return;
