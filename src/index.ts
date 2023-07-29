@@ -118,7 +118,6 @@ export default class SwupPreloadPlugin extends Plugin {
 		if (!this.deviceSupportsHover()) return;
 
 		const el = event.delegateTarget;
-
 		if (!(el instanceof HTMLAnchorElement)) return;
 
 		this.swup.hooks.callSync('link:hover', { el, event });
@@ -129,14 +128,17 @@ export default class SwupPreloadPlugin extends Plugin {
 		// Return early on devices that support hover
 		if (this.deviceSupportsHover()) return;
 
-		this.preloadLink(event.delegateTarget);
+		const el = event.delegateTarget;
+		if (!(el instanceof HTMLAnchorElement)) return;
+
+		this.preloadLink(el);
 	};
 
-	preloadLink(el: Element) {
-		const { url } = Location.fromElement(el);
+	preloadLink(el: HTMLAnchorElement) {
+		const { url, href } = Location.fromElement(el);
 
 		// Bail early if the visit should be ignored by swup
-		if (this.swup.shouldIgnoreVisit(url, { el })) return;
+		if (this.swup.shouldIgnoreVisit(href, { el })) return;
 
 		// Bail early if the link points to the current page
 		if (url === getCurrentUrl()) return;
