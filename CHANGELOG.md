@@ -2,6 +2,10 @@
 
 <!-- ## [Unreleased] -->
 
+## [3.1.2] - 2023-07-29
+
+- Fix regression: Make sure only local links are being preloaded
+
 ## [3.1.1] - 2023-07-28
 
 - Make the type declarations discoverable from package.json
