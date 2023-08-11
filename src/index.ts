@@ -64,7 +64,7 @@ export default class SwupPreloadPlugin extends Plugin {
 
 	queue: Queue;
 	preloadPromises = new Map();
-	preloadObserver?: IntersectionObserver;
+	preloadObserver?: { stop: () => void; update: () => void };
 
 	mouseEnterDelegate?: DelegateEventUnsubscribe;
 	touchStartDelegate?: DelegateEventUnsubscribe;
@@ -238,6 +238,7 @@ export default class SwupPreloadPlugin extends Plugin {
 
 	protected preloadVisibleLinks() {
 		if (this.preloadObserver) {
+			this.preloadObserver.update();
 			return;
 		}
 
@@ -254,12 +255,6 @@ export default class SwupPreloadPlugin extends Plugin {
 				}
 			});
 		}, { threshold });
-
-		const observe = (links: HTMLAnchorElement[]) => {
-			links
-				.filter((link) => !this.triggerWillOpenNewWindow(link))
-				.forEach((link) => observer.observe(link));
-		};
 
 		const add = (el: HTMLAnchorElement) => {
 			visibleLinks.push(el.href);
@@ -278,21 +273,29 @@ export default class SwupPreloadPlugin extends Plugin {
 			}
 		};
 
-		requestIdleCallback(() => {
-			const linksToObserve: HTMLAnchorElement[] = containers.flatMap((selector) => {
-				const container = document.querySelector(selector);
-				return container ? Array.from(container.querySelectorAll<HTMLAnchorElement>(selector)) : [];
-			});
-			observe(linksToObserve);
-		}, { timeout });
+		const observe = () => {
+			requestIdleCallback(() => {
+				const linksToObserve: HTMLAnchorElement[] = containers.flatMap((selector) => {
+					const container = document.querySelector(selector);
+					return container ? Array.from(container.querySelectorAll<HTMLAnchorElement>(selector)) : [];
+				});
+				linksToObserve
+					.filter((link) => !this.triggerWillOpenNewWindow(link))
+					.forEach((link) => observer.observe(link));
+			}, { timeout });
+		};
 
-		this.preloadObserver = observer;
+		observe();
+
+		this.preloadObserver = {
+			stop: () => observer.disconnect(),
+			update: () => observe()
+		};
 	}
 
 	protected stopPreloadingVisibleLinks() {
 		if (this.preloadObserver) {
-			this.preloadObserver.disconnect();
-			this.preloadObserver = undefined;
+			this.preloadObserver.stop();
 		}
 	}
 
