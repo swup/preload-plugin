@@ -283,13 +283,16 @@ export default class SwupPreloadPlugin extends Plugin {
 					.forEach((link) => observer.observe(link));
 			});
 		};
+
+		const clear = () => {
+			visibleLinks.length = 0;
 		};
 
 		observe();
 
 		this.preloadObserver = {
 			stop: () => observer.disconnect(),
-			update: () => observe()
+			update: () => (clear(), observe())
 		};
 	}
 
