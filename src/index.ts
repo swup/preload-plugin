@@ -178,9 +178,11 @@ export default class SwupPreloadPlugin extends Plugin {
 			return;
 		}
 
-		const preloadPromise = new Promise<PageData | void>((resolve) => {
+		return new Promise<PageData | void>((resolve) => {
 			this.queue.add(() => {
-				this.performPreload(url)
+				const preloadPromise = this.performPreload(url);
+				this.preloadPromises.set(url, preloadPromise);
+				preloadPromise
 					.catch(() => {})
 					.then((page) => resolve(page))
 					.finally(() => {
@@ -189,10 +191,6 @@ export default class SwupPreloadPlugin extends Plugin {
 					});
 			}, priority);
 		});
-
-		this.preloadPromises.set(url, preloadPromise);
-
-		return preloadPromise;
 	}
 
 	preloadLinks() {
