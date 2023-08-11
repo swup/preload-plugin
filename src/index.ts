@@ -14,11 +14,23 @@ declare module 'swup' {
 	}
 }
 
+type VisibleLinkPreloadOptions = {
+	enabled: boolean;
+	threshold: number;
+	delay: number;
+	containers: string[];
+};
+
 export type PluginOptions = {
 	throttle: number;
-	preloadVisibleLinks: boolean;
+	timeout: number;
 	preloadInitialPage: boolean;
 	preloadHoveredLinks: boolean;
+	preloadVisibleLinks: VisibleLinkPreloadOptions;
+};
+
+export type PluginInitOptions = PluginOptions & {
+	preloadVisibleLinks: boolean | Partial<VisibleLinkPreloadOptions>;
 };
 
 type PreloadOptions = {
@@ -37,24 +49,41 @@ export default class SwupPreloadPlugin extends Plugin {
 
 	defaults: PluginOptions = {
 		throttle: 5,
-		preloadVisibleLinks: false,
-		preloadInitialPage: true
+		timeout: 2000,
+		preloadInitialPage: true,
 		preloadHoveredLinks: true,
+		preloadVisibleLinks: {
+			enabled: false,
+			threshold: 0,
+			delay: 0,
+			containers: ['body']
+		}
 	};
 
 	options: PluginOptions;
 
-	preloadPromises = new Map();
 	queue: Queue;
+	preloadPromises = new Map();
+	preloadObserver?: IntersectionObserver;
 
 	mouseEnterDelegate?: DelegateEventUnsubscribe;
 	touchStartDelegate?: DelegateEventUnsubscribe;
 
-	constructor(options: Partial<PluginOptions> = {}) {
+	constructor(options: Partial<PluginInitOptions> = {}) {
 		super();
-		this.options = { ...this.defaults, ...options };
+
+		const { preloadVisibleLinks, ...otherOptions } = options;
+		this.options = { ...this.defaults, ...otherOptions };
+
+		// Sanitize preload options
+		if (typeof preloadVisibleLinks !== 'object') {
+			this.options.preloadVisibleLinks.enabled = Boolean(preloadVisibleLinks);
+		}
+
+		// Bind public methods
 		this.preload = this.preload.bind(this);
 
+		// Create global priority queue
 		const [add, next] = throttles(this.options.throttle);
 		this.queue = { add, next };
 	}
@@ -96,15 +125,17 @@ export default class SwupPreloadPlugin extends Plugin {
 		if (this.options.preloadHoveredLinks) {
 			this.preloadLinks();
 			this.on('page:view', () => this.preloadLinks());
+		}
+
+		// preload visible links in viewport
+		if (this.options.preloadVisibleLinks.enabled) {
+			this.preloadVisibleLinks();
+			this.on('page:view', () => this.preloadVisibleLinks());
+		}
 
 		// cache unmodified dom of initial/current page
 		if (this.options.preloadInitialPage) {
 			this.preload(getCurrentUrl());
-		}
-
-		// preload visible links in viewport
-		if (this.options.preloadVisibleLinks) {
-			this.preloadVisibleLinks();
 		}
 	}
 
@@ -116,6 +147,8 @@ export default class SwupPreloadPlugin extends Plugin {
 
 		this.mouseEnterDelegate?.destroy();
 		this.touchStartDelegate?.destroy();
+
+		this.stopPreloadingVisibleLinks();
 	}
 
 	onPageLoad: Handler<'page:load'> = (visit, args, defaultHandler) => {
@@ -152,10 +185,6 @@ export default class SwupPreloadPlugin extends Plugin {
 
 		this.preload(el, { priority: true });
 	};
-
-	preloadVisibleLinks() {
-
-	}
 
 	async preload(url: string, options?: PreloadOptions): Promise<PageData | void>;
 	async preload(urls: string[], options?: PreloadOptions): Promise<PageData[]>;
@@ -207,6 +236,66 @@ export default class SwupPreloadPlugin extends Plugin {
 		links.forEach((el) => this.preload(el));
 	}
 
+	protected preloadVisibleLinks() {
+		if (this.preloadObserver) {
+			return;
+		}
+
+		const { timeout } = this.options;
+		const { threshold, delay, containers } = this.options.preloadVisibleLinks;
+		const visibleLinks: string[] = [];
+
+		const observer = new IntersectionObserver((entries) => {
+			entries.forEach(entry => {
+				if (entry.isIntersecting) {
+					add(entry.target as HTMLAnchorElement);
+				} else {
+					remove(entry.target as HTMLAnchorElement);
+				}
+			});
+		}, { threshold });
+
+		const observe = (links: HTMLAnchorElement[]) => {
+			links
+				.filter((link) => !this.triggerWillOpenNewWindow(link))
+				.forEach((link) => observer.observe(link));
+		};
+
+		const add = (el: HTMLAnchorElement) => {
+			visibleLinks.push(el.href);
+			setTimeout(() => {
+				if (visibleLinks.includes(el.href)) {
+					this.preload(el.href);
+					observer.unobserve(el);
+				}
+			}, delay);
+		};
+
+		const remove = (el: HTMLAnchorElement) => {
+			const index = visibleLinks.indexOf(el.href);
+			if (index > -1) {
+				visibleLinks.splice(index);
+			}
+		};
+
+		requestIdleCallback(() => {
+			const linksToObserve: HTMLAnchorElement[] = containers.flatMap((selector) => {
+				const container = document.querySelector(selector);
+				return container ? Array.from(container.querySelectorAll<HTMLAnchorElement>(selector)) : [];
+			});
+			observe(linksToObserve);
+		}, { timeout });
+
+		this.preloadObserver = observer;
+	}
+
+	protected stopPreloadingVisibleLinks() {
+		if (this.preloadObserver) {
+			this.preloadObserver.disconnect();
+			this.preloadObserver = undefined;
+		}
+	}
+
 	protected shouldPreload(location: string, el?: HTMLAnchorElement): boolean {
 		const { url, href } = Location.fromUrl(location);
 
@@ -234,6 +323,10 @@ export default class SwupPreloadPlugin extends Plugin {
 			}
 		}
 		return true;
+	}
+
+	protected triggerWillOpenNewWindow(el: HTMLAnchorElement) {
+		return el.matches('[download], [target="_blank"]') || el.origin !== window.location.origin;
 	}
 
 	protected async performPreload(url: string): Promise<PageData> {
