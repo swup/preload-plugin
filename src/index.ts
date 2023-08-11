@@ -19,6 +19,10 @@ export type PluginOptions = {
 	preloadInitialPage: boolean;
 };
 
+type PreloadOptions = {
+	priority?: boolean;
+};
+
 type Queue = {
 	add: (fn: () => void, highPriority?: boolean) => void;
 	next: () => void;
@@ -132,7 +136,7 @@ export default class SwupPreloadPlugin extends Plugin {
 		if (!(el instanceof HTMLAnchorElement)) return;
 
 		this.swup.hooks.callSync('link:hover', { el, event });
-		this.preloadLink(el);
+		this.preload(el, { priority: true });
 	};
 
 	onTouchStart: DelegateEventHandler = (event) => {
@@ -142,54 +146,77 @@ export default class SwupPreloadPlugin extends Plugin {
 		const el = event.delegateTarget;
 		if (!(el instanceof HTMLAnchorElement)) return;
 
-		this.preloadLink(el);
+		this.preload(el, { priority: true });
 	};
 
-	preloadLink(el: HTMLAnchorElement) {
-		const { url, href } = Location.fromElement(el);
+	async preload(url: string, options?: PreloadOptions): Promise<PageData | undefined>;
+	async preload(urls: string[], options?: PreloadOptions): Promise<PageData[]>;
+	async preload(el: HTMLAnchorElement, options?: PreloadOptions): Promise<PageData | undefined>;
+	async preload(
+		link: string | string[] | HTMLAnchorElement,
+		options: PreloadOptions = {}
+	): Promise<PageData | (PageData | undefined)[] | undefined> {
+		let url: string;
+		let trigger: HTMLAnchorElement | undefined;
+		const priority = options.priority ?? false;
 
-		// Bail early if the visit should be ignored by swup
-		if (this.swup.shouldIgnoreVisit(href, { el })) return;
+		// Allow passing in array of elements or urls
+		if (Array.isArray(link)) {
+			return Promise.all(link.map((url) => this.preload(url)));
+		}
+		// Allow passing in an anchor element
+		else if (link instanceof HTMLAnchorElement) {
+			trigger = link;
+			({ url } = Location.fromElement(link));
+		}
+		// Allow passing in a url
+		else {
+			url = String(link);
+		}
 
-		// Bail early if the link points to the current page
-		if (url === getCurrentUrl()) return;
+		if (!this.shouldPreload(url, trigger)) {
+			return;
+		}
 
-		// Bail early if the page is already in the cache
-		if (this.swup.cache.has(url)) return;
+		const preloadPromise = new Promise((resolve) => {
+			this.queue.add(() => {
+				this.performPreload(url)
+					.catch(() => {})
+					.then((page) => resolve(page))
+					.finally(() => {
+						this.queue.next();
+						this.preloadPromises.delete(url);
+					});
+			}, priority);
+		});
 
-		// Bail early if there is already a preload running
-		if (this.preloadPromises.has(url)) return;
-
-		// Bail early if there are more then the maximum concurrent preloads running
-		if (this.preloadPromises.size >= this.options.throttle) return;
-
-		const preloadPromise = this.preload(url);
-		preloadPromise
-			.catch(() => {})
-			.finally(() => {
-				this.preloadPromises.delete(url);
-			});
 		this.preloadPromises.set(url, preloadPromise);
 	}
 
-	async preload(url: string): Promise<PageData>;
-	async preload(urls: string[]): Promise<PageData[]>;
-	async preload(url: string | string[]): Promise<PageData | PageData[]> {
-		if (Array.isArray(url)) {
-			return Promise.all(url.map((url) => this.preload(url)));
-		}
+	preloadLinks() {
+		const selector = 'a[data-swup-preload], [data-swup-preload-all] a';
+		const links = Array.from(document.querySelectorAll<HTMLAnchorElement>(selector));
+		links.forEach((el) => this.preload(el));
+	}
 
+	protected shouldPreload(location: string, el?: HTMLAnchorElement): boolean {
+		const { url, href } = Location.fromUrl(location);
+
+		// Already in cache?
+		if (this.swup.cache.has(url)) return false;
+		// Already preloading?
+		if (this.preloadPromises.has(url)) return false;
+		// Should be ignored anyway?
+		if (this.swup.shouldIgnoreVisit(href, { el })) return false;
+		// Special condition for links: points to current page?
+		if (el && url === getCurrentUrl()) return false;
+
+		return true;
+	}
+
+	protected async performPreload(url: string): Promise<PageData> {
 		const page = await this.swup.fetchPage(url);
 		await this.swup.hooks.call('page:preload', { page });
 		return page;
 	}
-
-	preloadLinks = (): void => {
-		document
-			.querySelectorAll<HTMLAnchorElement>('a[data-swup-preload], [data-swup-preload-all] a')
-			.forEach((el) => {
-				if (this.swup.shouldIgnoreVisit(el.href, { el })) return;
-				this.swup.preload?.(el.href);
-			});
-	};
 }
