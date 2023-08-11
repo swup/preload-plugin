@@ -191,6 +191,8 @@ export default class SwupPreloadPlugin extends Plugin {
 		});
 
 		this.preloadPromises.set(url, preloadPromise);
+
+		return preloadPromise;
 	}
 
 	preloadLinks() {
