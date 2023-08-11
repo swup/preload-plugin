@@ -55,6 +55,9 @@
   "peerDependencies": {
     "swup": "^4.0.0"
   },
+  "devDependencies": {
+    "network-information-types": "^0.1.1"
+  },
   "browserslist": [
     "extends @swup/browserslist-config"
   ],

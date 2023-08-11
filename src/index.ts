@@ -202,6 +202,8 @@ export default class SwupPreloadPlugin extends Plugin {
 	protected shouldPreload(location: string, el?: HTMLAnchorElement): boolean {
 		const { url, href } = Location.fromUrl(location);
 
+		// Network too slow?
+		if (!this.networkSupportsPreloading()) return false;
 		// Already in cache?
 		if (this.swup.cache.has(url)) return false;
 		// Already preloading?
@@ -211,6 +213,18 @@ export default class SwupPreloadPlugin extends Plugin {
 		// Special condition for links: points to current page?
 		if (el && url === getCurrentUrl()) return false;
 
+		return true;
+	}
+
+	protected networkSupportsPreloading(): boolean {
+		if (navigator.connection) {
+			if (navigator.connection.saveData) {
+				return false;
+			}
+			if (navigator.connection.effectiveType?.endsWith('2g')) {
+				return false;
+			}
+		}
 		return true;
 	}
 
