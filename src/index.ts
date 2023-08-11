@@ -23,7 +23,6 @@ type VisibleLinkPreloadOptions = {
 
 export type PluginOptions = {
 	throttle: number;
-	timeout: number;
 	preloadInitialPage: boolean;
 	preloadHoveredLinks: boolean;
 	preloadVisibleLinks: VisibleLinkPreloadOptions;
@@ -49,13 +48,12 @@ export default class SwupPreloadPlugin extends Plugin {
 
 	defaults: PluginOptions = {
 		throttle: 5,
-		timeout: 2000,
 		preloadInitialPage: true,
 		preloadHoveredLinks: true,
 		preloadVisibleLinks: {
 			enabled: false,
-			threshold: 0,
-			delay: 0,
+			threshold: 0.2,
+			delay: 500,
 			containers: ['body']
 		}
 	};
@@ -244,7 +242,6 @@ export default class SwupPreloadPlugin extends Plugin {
 			return;
 		}
 
-		const { timeout } = this.options;
 		const { threshold, delay, containers } = this.options.preloadVisibleLinks;
 		const visibleLinks: string[] = [];
 
@@ -284,7 +281,8 @@ export default class SwupPreloadPlugin extends Plugin {
 				linksToObserve
 					.filter((link) => !this.triggerWillOpenNewWindow(link))
 					.forEach((link) => observer.observe(link));
-			}, { timeout });
+			});
+		};
 		};
 
 		observe();
