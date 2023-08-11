@@ -75,7 +75,7 @@ export default class SwupPreloadPlugin extends Plugin {
 		this.mouseEnterDelegate = swup.delegateEvent(
 			swup.options.linkSelector,
 			'mouseenter',
-			this.onMouseEnter.bind(this),
+			this.onMouseEnter,
 			{ capture: true }
 		);
 
@@ -83,7 +83,7 @@ export default class SwupPreloadPlugin extends Plugin {
 		this.touchStartDelegate = swup.delegateEvent(
 			swup.options.linkSelector,
 			'touchstart',
-			this.onTouchStart.bind(this),
+			this.onTouchStart,
 			{ capture: true }
 		);
 
