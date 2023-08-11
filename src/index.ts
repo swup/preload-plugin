@@ -276,7 +276,7 @@ export default class SwupPreloadPlugin extends Plugin {
 			requestIdleCallback(() => {
 				const linksToObserve: HTMLAnchorElement[] = containers.flatMap((selector) => {
 					const container = document.querySelector(selector);
-					return container ? Array.from(container.querySelectorAll<HTMLAnchorElement>(selector)) : [];
+					return container ? Array.from(container.querySelectorAll<HTMLAnchorElement>('a[href]')) : [];
 				});
 				linksToObserve
 					.filter((link) => !this.triggerWillOpenNewWindow(link))
