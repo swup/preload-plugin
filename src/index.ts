@@ -38,6 +38,7 @@ export default class SwupPreloadPlugin extends Plugin {
 	constructor(options: Partial<PluginOptions> = {}) {
 		super();
 		this.options = { ...this.defaults, ...options };
+		this.preload = this.preload.bind(this);
 	}
 
 	mount() {
@@ -161,11 +162,17 @@ export default class SwupPreloadPlugin extends Plugin {
 		this.preloadPromises.set(url, preloadPromise);
 	}
 
-	preload = async (url: string) => {
+	async preload(url: string): Promise<PageData>;
+	async preload(urls: string[]): Promise<PageData[]>;
+	async preload(url: string | string[]): Promise<PageData | PageData[]> {
+		if (Array.isArray(url)) {
+			return Promise.all(url.map((url) => this.preload(url)));
+		}
+
 		const page = await this.swup.fetchPage(url);
 		await this.swup.hooks.call('page:preload', { page });
 		return page;
-	};
+	}
 
 	preloadLinks = (): void => {
 		document
