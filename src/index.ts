@@ -231,9 +231,11 @@ export default class SwupPreloadPlugin extends Plugin {
 	}
 
 	preloadLinks() {
-		const selector = 'a[data-swup-preload], [data-swup-preload-all] a';
-		const links = Array.from(document.querySelectorAll<HTMLAnchorElement>(selector));
-		links.forEach((el) => this.preload(el));
+		requestIdleCallback(() => {
+			const selector = 'a[data-swup-preload], [data-swup-preload-all] a';
+			const links = Array.from(document.querySelectorAll<HTMLAnchorElement>(selector));
+			links.forEach((el) => this.preload(el));
+		});
 	}
 
 	protected preloadVisibleLinks() {
