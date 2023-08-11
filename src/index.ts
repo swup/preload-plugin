@@ -5,7 +5,7 @@ import { default as throttles } from 'throttles/priority';
 
 declare module 'swup' {
 	export interface Swup {
-		preload?: (url: string) => Promise<PageData>;
+		preload?: (url: string) => Promise<PageData | (PageData | void)[] | void>;
 		preloadLinks?: () => void;
 	}
 	export interface HookDefinitions {
@@ -149,13 +149,13 @@ export default class SwupPreloadPlugin extends Plugin {
 		this.preload(el, { priority: true });
 	};
 
-	async preload(url: string, options?: PreloadOptions): Promise<PageData | undefined>;
+	async preload(url: string, options?: PreloadOptions): Promise<PageData | void>;
 	async preload(urls: string[], options?: PreloadOptions): Promise<PageData[]>;
-	async preload(el: HTMLAnchorElement, options?: PreloadOptions): Promise<PageData | undefined>;
+	async preload(el: HTMLAnchorElement, options?: PreloadOptions): Promise<PageData | void>;
 	async preload(
 		link: string | string[] | HTMLAnchorElement,
 		options: PreloadOptions = {}
-	): Promise<PageData | (PageData | undefined)[] | undefined> {
+	): Promise<PageData | (PageData | void)[] | void> {
 		let url: string;
 		let trigger: HTMLAnchorElement | undefined;
 		const priority = options.priority ?? false;
@@ -178,7 +178,7 @@ export default class SwupPreloadPlugin extends Plugin {
 			return;
 		}
 
-		const preloadPromise = new Promise((resolve) => {
+		const preloadPromise = new Promise<PageData | void>((resolve) => {
 			this.queue.add(() => {
 				this.performPreload(url)
 					.catch(() => {})
