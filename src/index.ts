@@ -243,7 +243,7 @@ export default class SwupPreloadPlugin extends Plugin {
 		}
 
 		const { threshold, delay, containers } = this.options.preloadVisibleLinks;
-		const visibleLinks: string[] = [];
+		const visibleLinks = new Set<string>();
 
 		const observer = new IntersectionObserver((entries) => {
 			entries.forEach(entry => {
@@ -256,21 +256,18 @@ export default class SwupPreloadPlugin extends Plugin {
 		}, { threshold });
 
 		const add = (el: HTMLAnchorElement) => {
-			visibleLinks.push(el.href);
+			visibleLinks.add(el.href);
 			setTimeout(() => {
-				if (visibleLinks.includes(el.href)) {
+				if (visibleLinks.has(el.href)) {
 					this.preload(el.href);
 					observer.unobserve(el);
 				}
 			}, delay);
 		};
 
-		const remove = (el: HTMLAnchorElement) => {
-			const index = visibleLinks.indexOf(el.href);
-			if (index > -1) {
-				visibleLinks.splice(index);
-			}
-		};
+		const remove = (el: HTMLAnchorElement) => visibleLinks.delete(el.href);
+
+		const clear = () => visibleLinks.clear();
 
 		const observe = () => {
 			requestIdleCallback(() => {
@@ -282,10 +279,6 @@ export default class SwupPreloadPlugin extends Plugin {
 					.filter((link) => !this.triggerWillOpenNewWindow(link))
 					.forEach((link) => observer.observe(link));
 			});
-		};
-
-		const clear = () => {
-			visibleLinks.length = 0;
 		};
 
 		observe();
