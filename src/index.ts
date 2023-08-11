@@ -18,6 +18,7 @@ export type PluginOptions = {
 	throttle: number;
 	preloadVisibleLinks: boolean;
 	preloadInitialPage: boolean;
+	preloadHoveredLinks: boolean;
 };
 
 type PreloadOptions = {
@@ -38,6 +39,7 @@ export default class SwupPreloadPlugin extends Plugin {
 		throttle: 5,
 		preloadVisibleLinks: false,
 		preloadInitialPage: true
+		preloadHoveredLinks: true,
 	};
 
 	options: PluginOptions;
@@ -87,14 +89,13 @@ export default class SwupPreloadPlugin extends Plugin {
 			{ capture: true }
 		);
 
-		// preload links with [data-swup-preload] attr after page views
-		this.on('page:view', this.onPageView);
-
 		// inject custom promise whenever a page is loaded
 		this.replace('page:load', this.onPageLoad);
 
-		// initial preload of links with [data-swup-preload] attr
-		this.preloadLinks();
+		// preload links with [data-swup-preload] attr
+		if (this.options.preloadHoveredLinks) {
+			this.preloadLinks();
+			this.on('page:view', () => this.preloadLinks());
 
 		// cache unmodified dom of initial/current page
 		if (this.options.preloadInitialPage) {
@@ -115,10 +116,6 @@ export default class SwupPreloadPlugin extends Plugin {
 
 		this.mouseEnterDelegate?.destroy();
 		this.touchStartDelegate?.destroy();
-	}
-
-	onPageView() {
-		this.preloadLinks();
 	}
 
 	onPageLoad: Handler<'page:load'> = (visit, args, defaultHandler) => {
