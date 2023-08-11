@@ -246,7 +246,7 @@ export default class SwupPreloadPlugin extends Plugin {
 		const visibleLinks = new Set<string>();
 
 		const observer = new IntersectionObserver((entries) => {
-			entries.forEach(entry => {
+			entries.forEach((entry) => {
 				if (entry.isIntersecting) {
 					add(entry.target as HTMLAnchorElement);
 				} else {
@@ -271,11 +271,9 @@ export default class SwupPreloadPlugin extends Plugin {
 
 		const observe = () => {
 			requestIdleCallback(() => {
-				const linksToObserve: HTMLAnchorElement[] = containers.flatMap((selector) => {
-					const container = document.querySelector(selector);
-					return container ? Array.from(container.querySelectorAll<HTMLAnchorElement>('a[href]')) : [];
-				});
-				linksToObserve
+				const selector = containers.map((root) => `${root} a[href]`).join(', ');
+				const links = Array.from(document.querySelectorAll<HTMLAnchorElement>(selector));
+				links
 					.filter((link) => !this.triggerWillOpenNewWindow(link))
 					.forEach((link) => observer.observe(link));
 			});
