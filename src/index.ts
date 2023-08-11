@@ -1,6 +1,7 @@
 import Plugin from '@swup/plugin';
 import { getCurrentUrl, Handler, Location } from 'swup';
 import type { DelegateEvent, DelegateEventHandler, DelegateEventUnsubscribe, PageData } from 'swup';
+import { default as throttles } from 'throttles/priority';
 
 declare module 'swup' {
 	export interface Swup {
@@ -18,6 +19,11 @@ export type PluginOptions = {
 	preloadInitialPage: boolean;
 };
 
+type Queue = {
+	add: (fn: () => void, highPriority?: boolean) => void;
+	next: () => void;
+};
+
 export default class SwupPreloadPlugin extends Plugin {
 	name = 'SwupPreloadPlugin';
 
@@ -31,6 +37,7 @@ export default class SwupPreloadPlugin extends Plugin {
 	options: PluginOptions;
 
 	preloadPromises = new Map();
+	queue: Queue;
 
 	mouseEnterDelegate?: DelegateEventUnsubscribe;
 	touchStartDelegate?: DelegateEventUnsubscribe;
@@ -39,6 +46,9 @@ export default class SwupPreloadPlugin extends Plugin {
 		super();
 		this.options = { ...this.defaults, ...options };
 		this.preload = this.preload.bind(this);
+
+		const [add, next] = throttles(this.options.throttle);
+		this.queue = { add, next };
 	}
 
 	mount() {
