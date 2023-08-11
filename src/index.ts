@@ -16,6 +16,7 @@ declare module 'swup' {
 
 export type PluginOptions = {
 	throttle: number;
+	preloadVisibleLinks: boolean;
 	preloadInitialPage: boolean;
 };
 
@@ -35,6 +36,7 @@ export default class SwupPreloadPlugin extends Plugin {
 
 	defaults: PluginOptions = {
 		throttle: 5,
+		preloadVisibleLinks: false,
 		preloadInitialPage: true
 	};
 
@@ -98,6 +100,11 @@ export default class SwupPreloadPlugin extends Plugin {
 		if (this.options.preloadInitialPage) {
 			this.preload(getCurrentUrl());
 		}
+
+		// preload visible links in viewport
+		if (this.options.preloadVisibleLinks) {
+			this.preloadVisibleLinks();
+		}
 	}
 
 	unmount() {
@@ -148,6 +155,10 @@ export default class SwupPreloadPlugin extends Plugin {
 
 		this.preload(el, { priority: true });
 	};
+
+	preloadVisibleLinks() {
+
+	}
 
 	async preload(url: string, options?: PreloadOptions): Promise<PageData | void>;
 	async preload(urls: string[], options?: PreloadOptions): Promise<PageData[]>;
