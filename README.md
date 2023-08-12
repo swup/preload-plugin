@@ -133,7 +133,7 @@ The plugin adds two methods for preloading pages to the swup instance.
 
 ### preload
 
-Preload a URL or array of URLs. Returns a Promise that resolves when the page was preloaded.
+Preload a URL or array of URLs. Returns a Promise that resolves when all requested pages have been preloaded.
 
 ```js
 await swup.preload('/path/to/page');

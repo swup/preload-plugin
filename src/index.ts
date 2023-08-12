@@ -193,7 +193,7 @@ export default class SwupPreloadPlugin extends Plugin {
 	async preload(urls: string[], options?: PreloadOptions): Promise<PageData[]>;
 	async preload(el: HTMLAnchorElement, options?: PreloadOptions): Promise<PageData | void>;
 	async preload(
-		link: string | string[] | HTMLAnchorElement,
+		input: string | string[] | HTMLAnchorElement,
 		options: PreloadOptions = {}
 	): Promise<PageData | (PageData | void)[] | void> {
 		let url: string;
@@ -201,17 +201,17 @@ export default class SwupPreloadPlugin extends Plugin {
 		const priority = options.priority ?? false;
 
 		// Allow passing in array of elements or urls
-		if (Array.isArray(link)) {
-			return Promise.all(link.map((url) => this.preload(url)));
+		if (Array.isArray(input)) {
+			return Promise.all(input.map((link) => this.preload(link)));
 		}
 		// Allow passing in an anchor element
-		else if (link instanceof HTMLAnchorElement) {
-			trigger = link;
-			({ url } = Location.fromElement(link));
+		else if (input instanceof HTMLAnchorElement) {
+			trigger = input;
+			({ url } = Location.fromElement(input));
 		}
 		// Allow passing in a url
 		else {
-			url = String(link);
+			url = String(input);
 		}
 
 		if (!this.shouldPreload(url, trigger)) {
@@ -310,7 +310,7 @@ export default class SwupPreloadPlugin extends Plugin {
 		// Should be ignored anyway?
 		if (this.swup.shouldIgnoreVisit(href, { el })) return false;
 		// Special condition for links: points to current page?
-		if (el && url === getCurrentUrl()) return false;
+		if (el && this.swup.resolveUrl(url) === this.swup.resolveUrl(getCurrentUrl())) return false;
 
 		return true;
 	}
