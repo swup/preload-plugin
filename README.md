@@ -48,7 +48,9 @@ The plugin supports four ways of preloading links:
 
 Hovering a link will automatically preload it. Enabled by default.
 
-Hovered links have higher priority than any other running preload request.
+Depending on the user's device, the preload will be triggered when it is hovered with a mouse,
+touched with a finger, or focused using the keyboard. Hovered links are preloaded with higher
+priority than other running requests.
 
 ```html
 <a href="/about">About</a> <!-- will preload when hovering -->
@@ -95,13 +97,13 @@ The *concurrency limit* for simultaneous requests when preloading.
 
 Type: `Boolean`, Default: `true`
 
-Whether links should be preloaded when they are hovered.
+Preload links when they are hovered, touched or focused.
 
 ### preloadVisibleLinks
 
 Type: `Boolean` | `Object`, Default: `false`
 
-Preload links as they enter the viewport. Pass in a boolean `true` to enable with default options.
+Preload links when they enter the viewport. Pass in a boolean `true` to enable with default options.
 
 ```js
 new SwupPreloadPlugin({ preloadVisibleLinks: true })
@@ -111,12 +113,14 @@ For more control over the behavior, pass in an object. These are the default opt
 
 ```js
 new SwupPreloadPlugin({
-  /** How much area of a link must be visible to preload it: 0 to 1.0 */
-  threshold: 0.2,
-  /** How long a link must be visible to preload it, in milliseconds */
-  delay: 500,
-  /** Containers to look for links in */
-  containers: ['body']
+  preloadVisibleLinks: {
+    /** How much area of a link must be visible to preload it: 0 to 1.0 */
+    threshold: 0.2,
+    /** How long a link must be visible to preload it, in milliseconds */
+    delay: 500,
+    /** Containers to look for links in */
+    containers: ['body']
+  }
 })
 ```
 
@@ -124,8 +128,8 @@ new SwupPreloadPlugin({
 
 Type: `Boolean`, Default: `true`
 
-The reasoning behind preloading the initial page is to allow instant back-button navigation after you've navigated away from it.
-In some instances this can cause issues, so you can disable it by setting this option to `false`.
+Preload the initial page to allow instant back-button navigation after having navigated away from
+it. Disable this if it causes issues or doesn't make sense in your specific scenario.
 
 ## Methods on the swup instance
 
@@ -137,10 +141,7 @@ Preload a URL or array of URLs. Returns a Promise that resolves when all request
 
 ```js
 await swup.preload('/path/to/page');
-await swup.preload([
-  '/some/page',
-  '/other/page'
-]);
+await swup.preload(['/some/page', '/other/page']);
 ```
 
 ### preloadLinks
