@@ -45,6 +45,7 @@ export default class SwupPreloadPlugin extends Plugin {
 
 	mouseEnterDelegate?: DelegateEventUnsubscribe;
 	touchStartDelegate?: DelegateEventUnsubscribe;
+	focusDelegate?: DelegateEventUnsubscribe;
 
 	constructor(options: Partial<PluginOptions> = {}) {
 		super();
@@ -85,6 +86,14 @@ export default class SwupPreloadPlugin extends Plugin {
 			{ capture: true }
 		);
 
+		// register focus handler
+		this.focusDelegate = swup.delegateEvent(
+			swup.options.linkSelector,
+			'focus',
+			this.onFocus.bind(this),
+			{ capture: true }
+		);
+
 		// preload links with [data-swup-preload] attr after page views
 		this.on('page:view', this.onPageView);
 
@@ -108,6 +117,7 @@ export default class SwupPreloadPlugin extends Plugin {
 
 		this.mouseEnterDelegate?.destroy();
 		this.touchStartDelegate?.destroy();
+		this.focusDelegate?.destroy();
 	}
 
 	onPageView() {
@@ -143,6 +153,13 @@ export default class SwupPreloadPlugin extends Plugin {
 		// Return early on devices that support hover
 		if (this.deviceSupportsHover()) return;
 
+		const el = event.delegateTarget;
+		if (!(el instanceof HTMLAnchorElement)) return;
+
+		this.preload(el, { priority: true });
+	};
+
+	onFocus: DelegateEventHandler = (event) => {
 		const el = event.delegateTarget;
 		if (!(el instanceof HTMLAnchorElement)) return;
 
