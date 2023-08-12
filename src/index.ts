@@ -75,7 +75,7 @@ export default class SwupPreloadPlugin extends Plugin {
 			swup.options.linkSelector,
 			'mouseenter',
 			this.onMouseEnter.bind(this),
-			{ capture: true }
+			{ passive: true, capture: true }
 		);
 
 		// register touchstart handler
@@ -83,7 +83,7 @@ export default class SwupPreloadPlugin extends Plugin {
 			swup.options.linkSelector,
 			'touchstart',
 			this.onTouchStart.bind(this),
-			{ capture: true }
+			{ passive: true, capture: true }
 		);
 
 		// register focus handler
@@ -91,7 +91,7 @@ export default class SwupPreloadPlugin extends Plugin {
 			swup.options.linkSelector,
 			'focus',
 			this.onFocus.bind(this),
-			{ capture: true }
+			{ passive: true, capture: true }
 		);
 
 		// preload links with [data-swup-preload] attr after page views
