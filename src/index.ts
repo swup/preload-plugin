@@ -209,7 +209,7 @@ export default class SwupPreloadPlugin extends Plugin {
 		// Should be ignored anyway?
 		if (this.swup.shouldIgnoreVisit(href, { el })) return false;
 		// Special condition for links: points to current page?
-		if (el && url === getCurrentUrl()) return false;
+		if (el && this.swup.resolveUrl(url) === this.swup.resolveUrl(getCurrentUrl())) return false;
 
 		return true;
 	}
