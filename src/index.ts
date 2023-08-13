@@ -14,9 +14,22 @@ declare module 'swup' {
 	}
 }
 
+type VisibleLinkPreloadOptions = {
+	enabled: boolean;
+	threshold: number;
+	delay: number;
+	containers: string[];
+};
+
 export type PluginOptions = {
 	throttle: number;
 	preloadInitialPage: boolean;
+	preloadHoveredLinks: boolean;
+	preloadVisibleLinks: VisibleLinkPreloadOptions;
+};
+
+export type PluginInitOptions = PluginOptions & {
+	preloadVisibleLinks: boolean | Partial<VisibleLinkPreloadOptions>;
 };
 
 type PreloadOptions = {
@@ -35,23 +48,46 @@ export default class SwupPreloadPlugin extends Plugin {
 
 	defaults: PluginOptions = {
 		throttle: 5,
-		preloadInitialPage: true
+		preloadInitialPage: true,
+		preloadHoveredLinks: true,
+		preloadVisibleLinks: {
+			enabled: false,
+			threshold: 0.2,
+			delay: 500,
+			containers: ['body']
+		}
 	};
 
 	options: PluginOptions;
 
-	preloadPromises = new Map();
 	queue: Queue;
+	preloadPromises = new Map();
+	preloadObserver?: { stop: () => void; update: () => void };
 
 	mouseEnterDelegate?: DelegateEventUnsubscribe;
 	touchStartDelegate?: DelegateEventUnsubscribe;
 	focusDelegate?: DelegateEventUnsubscribe;
 
-	constructor(options: Partial<PluginOptions> = {}) {
+	constructor(options: Partial<PluginInitOptions> = {}) {
 		super();
-		this.options = { ...this.defaults, ...options };
+
+		const { preloadVisibleLinks, ...otherOptions } = options;
+		this.options = { ...this.defaults, ...otherOptions };
+
+		// Sanitize preload options
+		if (typeof preloadVisibleLinks === 'object') {
+			this.options.preloadVisibleLinks = {
+				...this.options.preloadVisibleLinks,
+				...preloadVisibleLinks
+			};
+		} else {
+			this.options.preloadVisibleLinks.enabled = Boolean(preloadVisibleLinks);
+		}
+
+		// Bind public methods
 		this.preload = this.preload.bind(this);
 
+		// Create global priority queue
 		const [add, next] = throttles(this.options.throttle);
 		this.queue = { add, next };
 	}
@@ -74,7 +110,7 @@ export default class SwupPreloadPlugin extends Plugin {
 		this.mouseEnterDelegate = swup.delegateEvent(
 			swup.options.linkSelector,
 			'mouseenter',
-			this.onMouseEnter.bind(this),
+			this.onMouseEnter,
 			{ passive: true, capture: true }
 		);
 
@@ -82,7 +118,7 @@ export default class SwupPreloadPlugin extends Plugin {
 		this.touchStartDelegate = swup.delegateEvent(
 			swup.options.linkSelector,
 			'touchstart',
-			this.onTouchStart.bind(this),
+			this.onTouchStart,
 			{ passive: true, capture: true }
 		);
 
@@ -90,18 +126,24 @@ export default class SwupPreloadPlugin extends Plugin {
 		this.focusDelegate = swup.delegateEvent(
 			swup.options.linkSelector,
 			'focus',
-			this.onFocus.bind(this),
+			this.onFocus,
 			{ passive: true, capture: true }
 		);
-
-		// preload links with [data-swup-preload] attr after page views
-		this.on('page:view', this.onPageView);
 
 		// inject custom promise whenever a page is loaded
 		this.replace('page:load', this.onPageLoad);
 
-		// initial preload of links with [data-swup-preload] attr
-		this.preloadLinks();
+		// preload links with [data-swup-preload] attr
+		if (this.options.preloadHoveredLinks) {
+			this.preloadLinks();
+			this.on('page:view', () => this.preloadLinks());
+		}
+
+		// preload visible links in viewport
+		if (this.options.preloadVisibleLinks.enabled) {
+			this.preloadVisibleLinks();
+			this.on('page:view', () => this.preloadVisibleLinks());
+		}
 
 		// cache unmodified dom of initial/current page
 		if (this.options.preloadInitialPage) {
@@ -118,10 +160,8 @@ export default class SwupPreloadPlugin extends Plugin {
 		this.mouseEnterDelegate?.destroy();
 		this.touchStartDelegate?.destroy();
 		this.focusDelegate?.destroy();
-	}
 
-	onPageView() {
-		this.preloadLinks();
+		this.stopPreloadingVisibleLinks();
 	}
 
 	onPageLoad: Handler<'page:load'> = (visit, args, defaultHandler) => {
@@ -211,14 +251,75 @@ export default class SwupPreloadPlugin extends Plugin {
 	}
 
 	preloadLinks() {
-		const selector = 'a[data-swup-preload], [data-swup-preload-all] a';
-		const links = Array.from(document.querySelectorAll<HTMLAnchorElement>(selector));
-		links.forEach((el) => this.preload(el));
+		requestIdleCallback(() => {
+			const selector = 'a[data-swup-preload], [data-swup-preload-all] a';
+			const links = Array.from(document.querySelectorAll<HTMLAnchorElement>(selector));
+			links.forEach((el) => this.preload(el));
+		});
+	}
+
+	protected preloadVisibleLinks() {
+		if (this.preloadObserver) {
+			this.preloadObserver.update();
+			return;
+		}
+
+		const { threshold, delay, containers } = this.options.preloadVisibleLinks;
+		const visibleLinks = new Set<string>();
+
+		const observer = new IntersectionObserver((entries) => {
+			entries.forEach((entry) => {
+				if (entry.isIntersecting) {
+					add(entry.target as HTMLAnchorElement);
+				} else {
+					remove(entry.target as HTMLAnchorElement);
+				}
+			});
+		}, { threshold });
+
+		const add = (el: HTMLAnchorElement) => {
+			visibleLinks.add(el.href);
+			setTimeout(() => {
+				if (visibleLinks.has(el.href)) {
+					this.preload(el.href);
+					observer.unobserve(el);
+				}
+			}, delay);
+		};
+
+		const remove = (el: HTMLAnchorElement) => visibleLinks.delete(el.href);
+
+		const clear = () => visibleLinks.clear();
+
+		const observe = () => {
+			requestIdleCallback(() => {
+				const selector = containers.map((root) => `${root} a[href]`).join(', ');
+				const links = Array.from(document.querySelectorAll<HTMLAnchorElement>(selector));
+				links
+					.filter((link) => !this.triggerWillOpenNewWindow(link))
+					.forEach((link) => observer.observe(link));
+			});
+		};
+
+		observe();
+
+		this.preloadObserver = {
+			stop: () => observer.disconnect(),
+			update: () => (clear(), observe())
+		};
+	}
+
+	protected stopPreloadingVisibleLinks() {
+		if (this.preloadObserver) {
+			this.preloadObserver.stop();
+		}
 	}
 
 	protected shouldPreload(location: string, el?: HTMLAnchorElement): boolean {
 		const { url, href } = Location.fromUrl(location);
 
+		// Network too slow?
+		if (!this.networkSupportsPreloading()) return false;
 		// Already in cache?
 		if (this.swup.cache.has(url)) return false;
 		// Already preloading?
@@ -229,6 +330,22 @@ export default class SwupPreloadPlugin extends Plugin {
 		if (el && this.swup.resolveUrl(url) === this.swup.resolveUrl(getCurrentUrl())) return false;
 
 		return true;
+	}
+
+	protected networkSupportsPreloading(): boolean {
+		if (navigator.connection) {
+			if (navigator.connection.saveData) {
+				return false;
+			}
+			if (navigator.connection.effectiveType?.endsWith('2g')) {
+				return false;
+			}
+		}
+		return true;
+	}
+
+	protected triggerWillOpenNewWindow(el: HTMLAnchorElement) {
+		return el.matches('[download], [target="_blank"]') || el.origin !== window.location.origin;
 	}
 
 	protected async performPreload(url: string): Promise<PageData> {
