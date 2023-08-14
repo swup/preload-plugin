@@ -61,7 +61,7 @@ export default class SwupPreloadPlugin extends Plugin {
 	options: PluginOptions;
 
 	queue: Queue;
-	preloadPromises = new Map();
+	preloadPromises = new Map<string, Promise<unknown>>();
 	preloadObserver?: { stop: () => void; update: () => void };
 
 	mouseEnterDelegate?: DelegateEventUnsubscribe;
@@ -166,7 +166,7 @@ export default class SwupPreloadPlugin extends Plugin {
 
 	onPageLoad: Handler<'page:load'> = (visit, args, defaultHandler) => {
 		const { url } = visit.to;
-		if (this.preloadPromises.has(url)) {
+		if (url && this.preloadPromises.has(url)) {
 			return this.preloadPromises.get(url);
 		}
 		return defaultHandler?.(visit, args);
