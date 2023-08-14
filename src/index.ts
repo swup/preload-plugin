@@ -28,7 +28,7 @@ export type PluginOptions = {
 	preloadVisibleLinks: VisibleLinkPreloadOptions;
 };
 
-export type PluginInitOptions = PluginOptions & {
+export type PluginInitOptions = Omit<PluginOptions, 'preloadVisibleLinks'> & {
 	preloadVisibleLinks: boolean | Partial<VisibleLinkPreloadOptions>;
 };
 
