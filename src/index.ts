@@ -287,7 +287,7 @@ export default class SwupPreloadPlugin extends Plugin {
 			visibleLinks.add(el.href);
 			setTimeout(() => {
 				if (visibleLinks.has(el.href)) {
-					this.preload(el.href);
+					this.preload(el);
 					observer.unobserve(el);
 				}
 			}, delay);
@@ -302,8 +302,8 @@ export default class SwupPreloadPlugin extends Plugin {
 				const selector = containers.map((root) => `${root} a[href]`).join(', ');
 				const links = Array.from(document.querySelectorAll<HTMLAnchorElement>(selector));
 				links
-					.filter((link) => !this.triggerWillOpenNewWindow(link))
-					.forEach((link) => observer.observe(link));
+					.filter((el) => !this.swup.shouldIgnoreVisit(el.href, { el }))
+					.forEach((el) => observer.observe(el));
 			});
 		};
 
