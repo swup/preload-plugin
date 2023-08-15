@@ -125,31 +125,13 @@ export default class SwupPreloadPlugin extends Plugin {
 		swup.preload = this.preload;
 		swup.preloadLinks = this.preloadLinks;
 
-		// register mouseenter handler
-		this.mouseEnterDelegate = swup.delegateEvent(
-			swup.options.linkSelector,
-			'mouseenter',
-			this.onMouseEnter,
-			{ passive: true, capture: true }
-		);
+		// Register handlers for preloading on attention: mouseenter, touchstart, focus
+		const { linkSelector: selector } = swup.options;
+		const opts = { passive: true, capture: true };
+		this.mouseEnterDelegate = swup.delegateEvent(selector, 'mouseenter', this.onMouseEnter, opts);
+		this.touchStartDelegate = swup.delegateEvent(selector, 'touchstart', this.onTouchStart, opts);
+		this.focusDelegate = swup.delegateEvent(selector, 'focus', this.onFocus, opts);
 
-		// register touchstart handler
-		this.touchStartDelegate = swup.delegateEvent(
-			swup.options.linkSelector,
-			'touchstart',
-			this.onTouchStart,
-			{ passive: true, capture: true }
-		);
-
-		// register focus handler
-		this.focusDelegate = swup.delegateEvent(
-			swup.options.linkSelector,
-			'focus',
-			this.onFocus,
-			{ passive: true, capture: true }
-		);
-
-		// inject custom promise whenever a page is loaded
 		// Inject custom promise whenever a page is loaded
 		this.replace('page:load', this.onPageLoad);
 
