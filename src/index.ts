@@ -231,8 +231,10 @@ export default class SwupPreloadPlugin extends Plugin {
 	async preload(url: string, options?: PreloadOptions): Promise<PageData | void>;
 	async preload(urls: string[], options?: PreloadOptions): Promise<(PageData | void)[]>;
 	async preload(el: HTMLAnchorElement, options?: PreloadOptions): Promise<PageData | void>;
+	async preload(els: HTMLAnchorElement[], options?: PreloadOptions): Promise<(PageData | void)[]>;
+	async preload(input: string | HTMLAnchorElement, options?: PreloadOptions): Promise<PageData | void>;
 	async preload(
-		input: string | string[] | HTMLAnchorElement,
+		input: string | string[] | HTMLAnchorElement | HTMLAnchorElement[],
 		options: PreloadOptions = {}
 	): Promise<PageData | (PageData | void)[] | void> {
 		let url: string;
@@ -249,8 +251,12 @@ export default class SwupPreloadPlugin extends Plugin {
 			({ url } = Location.fromElement(input));
 		}
 		// Allow passing in a url
+		else if (typeof input === 'string') {
+			url = input;
+		}
+		// Disallow other types
 		else {
-			url = String(input);
+			return;
 		}
 
 		// Already preloading? Return existing promise
