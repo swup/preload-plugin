@@ -61,7 +61,7 @@ export default class SwupPreloadPlugin extends Plugin {
 	options: PluginOptions;
 
 	queue: Queue;
-	preloadPromises = new Map<string, Promise<unknown>>();
+	preloadPromises = new Map<string, Promise<PageData | void>>();
 	preloadObserver?: { stop: () => void; update: () => void };
 
 	mouseEnterDelegate?: DelegateEventUnsubscribe;
@@ -207,7 +207,7 @@ export default class SwupPreloadPlugin extends Plugin {
 	};
 
 	async preload(url: string, options?: PreloadOptions): Promise<PageData | void>;
-	async preload(urls: string[], options?: PreloadOptions): Promise<PageData[]>;
+	async preload(urls: string[], options?: PreloadOptions): Promise<(PageData | void)[]>;
 	async preload(el: HTMLAnchorElement, options?: PreloadOptions): Promise<PageData | void>;
 	async preload(
 		input: string | string[] | HTMLAnchorElement,
