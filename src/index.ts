@@ -214,7 +214,7 @@ export default class SwupPreloadPlugin extends Plugin {
 		options: PreloadOptions = {}
 	): Promise<PageData | (PageData | void)[] | void> {
 		let url: string;
-		let trigger: HTMLAnchorElement | undefined;
+		let el: HTMLAnchorElement | undefined;
 		const priority = options.priority ?? false;
 
 		// Allow passing in array of elements or urls
@@ -223,7 +223,7 @@ export default class SwupPreloadPlugin extends Plugin {
 		}
 		// Allow passing in an anchor element
 		else if (input instanceof HTMLAnchorElement) {
-			trigger = input;
+			el = input;
 			({ url } = Location.fromElement(input));
 		}
 		// Allow passing in a url
@@ -235,7 +235,7 @@ export default class SwupPreloadPlugin extends Plugin {
 			return this.preloadPromises.get(url);
 		}
 
-		if (!this.shouldPreload(url, trigger)) {
+		if (!this.shouldPreload(url, { el })) {
 			return;
 		}
 
@@ -302,7 +302,7 @@ export default class SwupPreloadPlugin extends Plugin {
 				const selector = containers.map((root) => `${root} a[href]`).join(', ');
 				const links = Array.from(document.querySelectorAll<HTMLAnchorElement>(selector));
 				links
-					.filter((el) => !this.swup.shouldIgnoreVisit(el.href, { el }))
+					.filter((el) => this.shouldPreload(el.href, { el }))
 					.forEach((el) => observer.observe(el));
 			});
 		};
@@ -321,7 +321,7 @@ export default class SwupPreloadPlugin extends Plugin {
 		}
 	}
 
-	protected shouldPreload(location: string, el?: HTMLAnchorElement): boolean {
+	protected shouldPreload(location: string, { el }: { el?: HTMLAnchorElement } = {}): boolean {
 		const { url, href } = Location.fromUrl(location);
 
 		// Network too slow?
@@ -338,6 +338,12 @@ export default class SwupPreloadPlugin extends Plugin {
 		return true;
 	}
 
+	protected async performPreload(url: string): Promise<PageData> {
+		const page = await this.swup.fetchPage(url);
+		await this.swup.hooks.call('page:preload', { page });
+		return page;
+	}
+
 	protected networkSupportsPreloading(): boolean {
 		if (navigator.connection) {
 			if (navigator.connection.saveData) {
@@ -348,15 +354,5 @@ export default class SwupPreloadPlugin extends Plugin {
 			}
 		}
 		return true;
-	}
-
-	protected triggerWillOpenNewWindow(el: HTMLAnchorElement) {
-		return el.matches('[download], [target="_blank"]') || el.origin !== window.location.origin;
-	}
-
-	protected async performPreload(url: string): Promise<PageData> {
-		const page = await this.swup.fetchPage(url);
-		await this.swup.hooks.call('page:preload', { page });
-		return page;
 	}
 }
