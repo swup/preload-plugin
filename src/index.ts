@@ -61,7 +61,6 @@ export default class SwupPreloadPlugin extends Plugin {
 	options: PluginOptions;
 
 	queue: Queue;
-	preloadQueue = new Map<string, Promise<unknown>>();
 	preloadPromises = new Map<string, Promise<unknown>>();
 	preloadObserver?: { stop: () => void; update: () => void };
 
@@ -156,7 +155,6 @@ export default class SwupPreloadPlugin extends Plugin {
 		this.swup.preload = undefined;
 		this.swup.preloadLinks = undefined;
 
-		this.preloadQueue.clear();
 		this.preloadPromises.clear();
 
 		this.mouseEnterDelegate?.destroy();
@@ -237,7 +235,7 @@ export default class SwupPreloadPlugin extends Plugin {
 			return;
 		}
 
-		const queuePromise = new Promise<PageData | void>((resolve) => {
+		const preloadPromise = new Promise<PageData | void>((resolve) => {
 			this.queue.add(() => {
 				const preloadPromise = this.performPreload(url);
 				this.preloadPromises.set(url, preloadPromise);
@@ -246,15 +244,13 @@ export default class SwupPreloadPlugin extends Plugin {
 					.then((page) => resolve(page))
 					.finally(() => {
 						this.queue.next();
-						this.preloadQueue.delete(url);
 						this.preloadPromises.delete(url);
 					});
 			}, priority);
 		});
 
-		this.preloadQueue.set(url, queuePromise);
 
-		return queuePromise;
+		return preloadPromise;
 	}
 
 	preloadLinks() {
