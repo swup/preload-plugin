@@ -78,13 +78,13 @@ export default class SwupPreloadPlugin extends Plugin {
 
 	options: PluginOptions;
 
-	queue: Queue;
-	preloadPromises = new Map<string, Promise<PageData | void>>();
-	preloadObserver?: { stop: () => void; update: () => void };
+	protected queue: Queue;
+	protected preloadPromises = new Map<string, Promise<PageData | void>>();
+	protected preloadObserver?: { stop: () => void; update: () => void };
 
-	mouseEnterDelegate?: DelegateEventUnsubscribe;
-	touchStartDelegate?: DelegateEventUnsubscribe;
-	focusDelegate?: DelegateEventUnsubscribe;
+	protected mouseEnterDelegate?: DelegateEventUnsubscribe;
+	protected touchStartDelegate?: DelegateEventUnsubscribe;
+	protected focusDelegate?: DelegateEventUnsubscribe;
 
 	constructor(options: Partial<PluginInitOptions> = {}) {
 		super();
