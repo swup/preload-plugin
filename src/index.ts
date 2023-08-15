@@ -180,7 +180,7 @@ export default class SwupPreloadPlugin extends Plugin {
 	/**
 	 * When hovering over a link: preload the linked page with high priority.
 	 */
-	protected onMouseEnter: DelegateEventHandler<MouseEvent, HTMLAnchorElement> = async (event) => {
+	protected onMouseEnter: DelegateEventHandler = async (event) => {
 		// Make sure mouseenter is only fired once even on links with nested html
 		if (event.target !== event.delegateTarget) return;
 
@@ -197,7 +197,7 @@ export default class SwupPreloadPlugin extends Plugin {
 	/**
 	 * When touching a link: preload the linked page with high priority.
 	 */
-	protected onTouchStart: DelegateEventHandler<TouchEvent, HTMLAnchorElement> = (event) => {
+	protected onTouchStart: DelegateEventHandler = (event) => {
 		// Return early on devices that support hover
 		if (this.deviceSupportsHover()) return;
 
@@ -210,7 +210,7 @@ export default class SwupPreloadPlugin extends Plugin {
 	/**
 	 * When focussing a link: preload the linked page with high priority.
 	 */
-	protected onFocus: DelegateEventHandler<FocusEvent, HTMLAnchorElement> = (event) => {
+	protected onFocus: DelegateEventHandler = (event) => {
 		const el = event.delegateTarget;
 		if (!(el instanceof HTMLAnchorElement)) return;
 
