@@ -263,7 +263,9 @@ export default class SwupPreloadPlugin extends Plugin {
 			return;
 		}
 
-		const preloadPromise = new Promise<PageData | void>((resolve) => {
+		// Queue the preload with either low or high priority
+		// The actual preload will happen when a spot in the queue is available
+		const queuedPromise = new Promise<PageData | void>((resolve) => {
 			this.queue.add(() => {
 				this.performPreload(url)
 					.catch(() => {})
@@ -275,9 +277,9 @@ export default class SwupPreloadPlugin extends Plugin {
 			}, priority);
 		});
 
-		this.preloadPromises.set(url, preloadPromise);
+		this.preloadPromises.set(url, queuedPromise);
 
-		return preloadPromise;
+		return queuedPromise;
 	}
 
 	/**
