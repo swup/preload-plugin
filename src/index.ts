@@ -10,7 +10,7 @@ declare module 'swup' {
 		 * - a URL or an array of URLs
 		 * - a link element or an array of link elements
 		 */
-		preload?: (url: string) => Promise<PageData | (PageData | void)[] | void>;
+		preload?: (input: string | string[] | HTMLAnchorElement | HTMLAnchorElement[]) => Promise<PageData | (PageData | void)[] | void>;
 		/**
 		 * Preload any links on the current page manually marked for preloading.
 		 */
