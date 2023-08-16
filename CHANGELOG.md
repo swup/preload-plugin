@@ -2,6 +2,10 @@
 
 <!-- ## [Unreleased] -->
 
+## [3.2.2] - 2023-08-16
+
+- Fix missing dist files
+
 ## [3.2.1] - 2023-08-15
 
 - Optimize intersection observer performance
@@ -87,8 +91,9 @@
 
 - Initial release
 
-[Unreleased]: https://github.com/swup/preload-plugin/compare/3.2.1...HEAD
+[Unreleased]: https://github.com/swup/preload-plugin/compare/3.2.2...HEAD
 
+[3.2.2]: https://github.com/swup/preload-plugin/releases/tag/3.2.2
 [3.2.1]: https://github.com/swup/preload-plugin/releases/tag/3.2.1
 [3.2.0]: https://github.com/swup/preload-plugin/releases/tag/3.2.0
 [3.1.2]: https://github.com/swup/preload-plugin/releases/tag/3.1.2
