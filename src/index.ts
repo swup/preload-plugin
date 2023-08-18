@@ -1,7 +1,7 @@
 import Plugin from '@swup/plugin';
 import { getCurrentUrl, Handler, Location } from 'swup';
 import type { DelegateEvent, DelegateEventHandler, DelegateEventUnsubscribe, PageData } from 'swup';
-import { default as throttles } from 'throttles/priority';
+import createQueue, { Queue } from './queue.js';
 
 declare module 'swup' {
 	export interface Swup {
@@ -54,11 +54,6 @@ type PreloadOptions = {
 	priority?: boolean;
 };
 
-type Queue = {
-	add: (fn: () => void, highPriority?: boolean) => void;
-	next: () => void;
-};
-
 export default class SwupPreloadPlugin extends Plugin {
 	name = 'SwupPreloadPlugin';
 
@@ -107,8 +102,7 @@ export default class SwupPreloadPlugin extends Plugin {
 		this.preload = this.preload.bind(this);
 
 		// Create global priority queue
-		const [add, next] = throttles(this.options.throttle);
-		this.queue = { add, next };
+		this.queue = createQueue(this.options.throttle);
 	}
 
 	mount() {
