@@ -58,7 +58,10 @@ export default class Queue {
 		return [this.qhigh, this.qlow].reduce((acc, queue) => {
 			if (!acc) {
 				const [key, fn] = queue.entries().next().value || [];
-				return key ? { key, fn } : acc;
+				if (key) {
+					queue.delete(key);
+					return { key, fn };
+				}
 			}
 			return acc;
 		}, null as { key: string; fn: QueueFunction } | null);
