@@ -1,5 +1,5 @@
 type QueueFunction = {
-	(): void | Promise<void>;
+	(): unknown | Promise<unknown>;
 };
 
 export default class Queue {
@@ -16,27 +16,20 @@ export default class Queue {
 		return this.qlow.size + this.qhigh.size;
 	}
 
-	has(key: string): boolean {
-		return this.qlow.has(key) || this.qhigh.has(key);
-	}
-
 	add(key: string, fn: QueueFunction, highPriority: boolean = false): void {
-		if (this.running.has(key)) {
-			return;
-		}
+		if (this.running.has(key)) return;
 
-		if (this.has(key)) {
-			if (highPriority) {
-				// Promote from low to high-priority queue
-				this.qlow.delete(key);
-			} else {
-				return;
-			}
+		if (this.qlow.has(key) && highPriority) {
+			// Promote from low to high-priority queue
+			this.qlow.delete(key);
+		} else if (this.qhigh.has(key)) {
+			// Skip if already in queue
+			return;
 		}
 
 		(highPriority ? this.qhigh : this.qlow).set(key, fn);
 
-		if (!this.running.size) {
+		if (this.total <= 1) {
 			this.run();
 		}
 	}
@@ -48,6 +41,7 @@ export default class Queue {
 		const next = this.next();
 		if (next) {
 			this.running.add(next.key);
+			this.run();
 			await next.fn();
 			this.running.delete(next.key);
 			this.run();
@@ -58,10 +52,8 @@ export default class Queue {
 		return [this.qhigh, this.qlow].reduce((acc, queue) => {
 			if (!acc) {
 				const [key, fn] = queue.entries().next().value || [];
-				if (key) {
-					queue.delete(key);
-					return { key, fn };
-				}
+				queue.delete(key);
+				return key ? { key, fn } : null;
 			}
 			return acc;
 		}, null as { key: string; fn: QueueFunction } | null);
