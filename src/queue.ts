@@ -1,59 +1,66 @@
 type QueueFunction = {
-	(): void;
-	__queued?: boolean;
+	(): void | Promise<void>;
 };
 
-export type Queue = {
-	add: (fn: QueueFunction, highPriority?: boolean) => void;
-	next: () => void;
-};
+export default class Queue {
+	private limit: number;
+	private qlow: Map<string, QueueFunction> = new Map();
+	private qhigh: Map<string, QueueFunction> = new Map();
+	private running: Set<string> = new Set();
 
-export default function createQueue(limit: number = 1): Queue {
-	const qlow: QueueFunction[] = [];
-	const qhigh: QueueFunction[] = [];
-	let total = 0;
-	let running = 0;
+	constructor(limit: number = 1) {
+		this.limit = limit;
+	}
 
-	function add(fn: QueueFunction, highPriority: boolean = false): void {
-		// Already added before?
-		if (fn.__queued) {
-			// Move from low to high-priority queue
+	get total(): number {
+		return this.qlow.size + this.qhigh.size;
+	}
+
+	has(key: string): boolean {
+		return this.qlow.has(key) || this.qhigh.has(key);
+	}
+
+	add(key: string, fn: QueueFunction, highPriority: boolean = false): void {
+		if (this.running.has(key)) {
+			return;
+		}
+
+		if (this.has(key)) {
 			if (highPriority) {
-				const idx = qlow.indexOf(fn);
-				if (idx >= 0) {
-					const removed = qlow.splice(idx, 1);
-					total = total - removed.length;
-				}
+				// Promote from low to high-priority queue
+				this.qlow.delete(key);
 			} else {
 				return;
 			}
 		}
 
-		// Mark as processed
-		fn.__queued = true;
-		// Push to queue: high or low
-		(highPriority ? qhigh : qlow).push(fn);
-		// Increment total
-		total++;
-		// Initialize queue if first item
-		if (total <= 1) {
-			run();
+		(highPriority ? this.qhigh : this.qlow).set(key, fn);
+
+		if (!this.running.size) {
+			this.run();
 		}
 	}
 
-	function next(): void {
-		running--; // make room for next
-		run();
-	}
+	protected async run(): Promise<void> {
+		if (!this.total) return;
+		if (this.running.size >= this.limit) return;
 
-	function run(): void {
-		if (running < limit && total > 0) {
-			const fn = qhigh.shift() || qlow.shift() || (() => {});
-			fn();
-			total--;
-			running++; // is now WIP
+		const next = this.next();
+		if (next) {
+			this.running.add(next.key);
+			await next.fn();
+			this.running.delete(next.key);
+			this.run();
 		}
 	}
 
-	return { add, next };
+	protected next(): { key: string; fn: QueueFunction } | null {
+		return [this.qhigh, this.qlow].reduce((acc, queue) => {
+			if (!acc) {
+				const [key, fn] = queue.entries().next().value || [];
+				return key ? { key, fn } : acc;
+			}
+			return acc;
+		}, null as { key: string; fn: QueueFunction } | null);
+	}
 }

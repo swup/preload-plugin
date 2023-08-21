@@ -1,7 +1,7 @@
 import Plugin from '@swup/plugin';
 import { getCurrentUrl, Handler, Location } from 'swup';
 import type { DelegateEvent, DelegateEventHandler, DelegateEventUnsubscribe, PageData } from 'swup';
-import createQueue, { Queue } from './queue.js';
+import Queue from './queue.js';
 
 declare module 'swup' {
 	export interface Swup {
@@ -102,7 +102,7 @@ export default class SwupPreloadPlugin extends Plugin {
 		this.preload = this.preload.bind(this);
 
 		// Create global priority queue
-		this.queue = createQueue(this.options.throttle);
+		this.queue = new Queue(this.options.throttle);
 	}
 
 	mount() {
@@ -267,12 +267,11 @@ export default class SwupPreloadPlugin extends Plugin {
 		// Queue the preload with either low or high priority
 		// The actual preload will happen when a spot in the queue is available
 		const queuedPromise = new Promise<PageData | void>((resolve) => {
-			this.queue.add(() => {
-				this.performPreload(url)
+			this.queue.add(url, () => {
+				return this.performPreload(url)
 					.catch(() => {})
 					.then((page) => resolve(page))
 					.finally(() => {
-						this.queue.next();
 						this.preloadPromises.delete(url);
 					});
 			}, priority);
