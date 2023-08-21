@@ -267,13 +267,10 @@ export default class SwupPreloadPlugin extends Plugin {
 		// Queue the preload with either low or high priority
 		// The actual preload will happen when a spot in the queue is available
 		const queuedPromise = new Promise<PageData | void>((resolve) => {
-			this.queue.add(url, () => {
-				return this.performPreload(url)
-					.catch(() => {})
-					.then((page) => resolve(page))
-					.finally(() => {
-						this.preloadPromises.delete(url);
-					});
+			this.queue.add(url, async () => {
+				const page = await this.performPreload(url);
+				this.preloadPromises.delete(url);
+				resolve(page);
 			}, priority);
 		});
 
@@ -391,10 +388,14 @@ export default class SwupPreloadPlugin extends Plugin {
 	/**
 	 * Perform the actual preload fetch and trigger the preload hook.
 	 */
-	protected async performPreload(url: string): Promise<PageData> {
-		const page = await this.swup.fetchPage(url);
-		await this.swup.hooks.call('page:preload', { page });
-		return page;
+	protected async performPreload(url: string): Promise<PageData | void> {
+		try {
+			const page = await this.swup.fetchPage(url);
+			await this.swup.hooks.call('page:preload', { page });
+			return page;
+		} catch (error) {
+			return;
+		}
 	}
 
 	/**
