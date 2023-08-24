@@ -59,6 +59,9 @@ type Queue = {
 	next: () => void;
 };
 
+// Create safe requestIdleCallback function that falls back to setTimeout
+const whenIdle = window.requestIdleCallback || ((cb) => setTimeout(cb, 1));
+
 export default class SwupPreloadPlugin extends Plugin {
 	name = 'SwupPreloadPlugin';
 
@@ -297,7 +300,7 @@ export default class SwupPreloadPlugin extends Plugin {
 	 * - adding a `data-swup-preload-all` attribute to a container of multiple links
 	 */
 	preloadLinks(): void {
-		requestIdleCallback(() => {
+		whenIdle(() => {
 			const selector = 'a[data-swup-preload], [data-swup-preload-all] a';
 			const links = Array.from(document.querySelectorAll<HTMLAnchorElement>(selector));
 			links.forEach((el) => this.preload(el));
@@ -348,7 +351,7 @@ export default class SwupPreloadPlugin extends Plugin {
 
 		// Scan DOM for preloadable links and start observing their visibility
 		const observe = () => {
-			requestIdleCallback(() => {
+			whenIdle(() => {
 				const selector = containers.map((root) => `${root} a[href]`).join(', ');
 				const links = Array.from(document.querySelectorAll<HTMLAnchorElement>(selector));
 				links
