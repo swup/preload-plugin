@@ -2,6 +2,10 @@
 
 <!-- ## [Unreleased] -->
 
+## [3.2.3] - 2023-08-24
+
+- Add fallback if `requestIdleCallback` is unavailable
+
 ## [3.2.2] - 2023-08-16
 
 - Fix missing dist files
@@ -91,8 +95,9 @@
 
 - Initial release
 
-[Unreleased]: https://github.com/swup/preload-plugin/compare/3.2.2...HEAD
+[Unreleased]: https://github.com/swup/preload-plugin/compare/3.2.3...HEAD
 
+[3.2.3]: https://github.com/swup/preload-plugin/releases/tag/3.2.3
 [3.2.2]: https://github.com/swup/preload-plugin/releases/tag/3.2.2
 [3.2.1]: https://github.com/swup/preload-plugin/releases/tag/3.2.1
 [3.2.0]: https://github.com/swup/preload-plugin/releases/tag/3.2.0
