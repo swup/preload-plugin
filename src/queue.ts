@@ -1,6 +1,4 @@
-type QueueFunction = {
-	(): unknown | Promise<unknown>;
-};
+type QueueFunction<T> = { (): Promise<T>; };
 
 /**
  * A priority queue that runs a limited number of jobs at a time.
@@ -8,12 +6,15 @@ type QueueFunction = {
 export default class Queue<T extends any = unknown> {
 	/** The number of jobs to run at a time */
 	private limit: number;
+
 	/** The queue of low-priority jobs */
-	private qlow: Map<string, QueueFunction> = new Map();
+	private qlow: Map<string, Promise<T>> = new Map();
+
 	/** The queue of high-priority jobs */
-	private qhigh: Map<string, QueueFunction> = new Map();
+	private qhigh: Map<string, Promise<T>> = new Map();
+
 	/** The list of currently running jobs */
-	private running: Map<string, Promise<T>> = new Map();
+	private qactive: Map<string, Promise<T>> = new Map();
 
 	constructor(limit: number = 1) {
 		this.limit = limit;
@@ -25,9 +26,10 @@ export default class Queue<T extends any = unknown> {
 	}
 
 	/** Add a job to queue */
-	async add(key: string, fn: QueueFunction, highPriority: boolean = false): Promise<T> {
-		if (this.running.has(key)) {
-			return this.running.get(key) as Promise<T>;
+	async add(key: string, fn: QueueFunction<T>, highPriority: boolean = false): Promise<T|void> {
+		// Short-circuit if already running
+		if (this.qactive.has(key)) {
+			return this.qactive.get(key);
 		}
 
 		if (this.qlow.has(key) && highPriority) {
@@ -45,8 +47,16 @@ export default class Queue<T extends any = unknown> {
 		}
 	}
 
+	active(key: string): boolean {
+		return this.qactive.has(key);
+	}
+
+	queued(key: string): boolean {
+		return this.qlow.has(key) || this.qhigh.has(key);
+	}
+
 	has(key: string): boolean {
-		return this.running.has(key) || this.qlow.has(key) || this.qhigh.has(key);
+		return this.active(key) || this.queued(key);
 	}
 
 	clear(): void {
@@ -57,14 +67,14 @@ export default class Queue<T extends any = unknown> {
 	/** Run the next available job */
 	protected async run(): Promise<void> {
 		if (!this.total) return;
-		if (this.running.size >= this.limit) return;
+		if (this.qactive.size >= this.limit) return;
 
 		const next = this.next();
 		if (next) {
-			this.running.add(next.key);
+			this.qactive.set(next.key);
 			this.run();
 			await next.fn();
-			this.running.delete(next.key);
+			this.qactive.delete(next.key);
 			this.run();
 		}
 	}

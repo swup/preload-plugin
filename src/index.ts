@@ -1,6 +1,7 @@
 import Plugin from '@swup/plugin';
 import { getCurrentUrl, Handler, Location } from 'swup';
 import type { DelegateEvent, DelegateEventHandler, DelegateEventUnsubscribe, PageData } from 'swup';
+
 import Queue from './queue.js';
 
 declare module 'swup' {
@@ -254,8 +255,8 @@ export default class SwupPreloadPlugin extends Plugin {
 		}
 
 		// Already preloading? Return existing promise
-		if (this.queue.has(url)) {
-			return this.queue.get(url);
+		if (this.preloadQueue.has(url)) {
+			return this.preloadQueue.get(url);
 		}
 
 		// Should we preload?
