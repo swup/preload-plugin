@@ -5,7 +5,7 @@ type QueueFunction = {
 /**
  * A priority queue that runs a limited number of jobs at a time.
  */
-export default class Queue {
+export default class Queue<T extends any = unknown> {
 	/** The number of jobs to run at a time */
 	private limit: number;
 	/** The queue of low-priority jobs */
@@ -13,7 +13,7 @@ export default class Queue {
 	/** The queue of high-priority jobs */
 	private qhigh: Map<string, QueueFunction> = new Map();
 	/** The list of currently running jobs */
-	private running: Set<string> = new Set();
+	private running: Map<string, Promise<T>> = new Map();
 
 	constructor(limit: number = 1) {
 		this.limit = limit;
@@ -25,8 +25,10 @@ export default class Queue {
 	}
 
 	/** Add a job to queue */
-	add(key: string, fn: QueueFunction, highPriority: boolean = false): void {
-		if (this.running.has(key)) return;
+	async add(key: string, fn: QueueFunction, highPriority: boolean = false): Promise<T> {
+		if (this.running.has(key)) {
+			return this.running.get(key) as Promise<T>;
+		}
 
 		if (this.qlow.has(key) && highPriority) {
 			// Promote from low to high-priority queue
@@ -41,6 +43,15 @@ export default class Queue {
 		if (this.total <= 1) {
 			this.run();
 		}
+	}
+
+	has(key: string): boolean {
+		return this.running.has(key) || this.qlow.has(key) || this.qhigh.has(key);
+	}
+
+	clear(): void {
+		this.qlow.clear();
+		this.qhigh.clear();
 	}
 
 	/** Run the next available job */
