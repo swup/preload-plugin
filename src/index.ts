@@ -1,7 +1,7 @@
 import Plugin from '@swup/plugin';
 import { getCurrentUrl, Handler, Location } from 'swup';
 import type { DelegateEvent, DelegateEventHandler, DelegateEventUnsubscribe, PageData } from 'swup';
-import { default as throttles } from 'throttles/priority';
+import createQueue, { Queue } from './queue.js';
 
 declare module 'swup' {
 	export interface Swup {
@@ -52,11 +52,6 @@ export type PluginInitOptions = Omit<PluginOptions, 'preloadVisibleLinks'> & {
 type PreloadOptions = {
 	/** Priority of this preload: `true` for high, `false` for low. */
 	priority?: boolean;
-};
-
-type Queue = {
-	add: (fn: () => void, highPriority?: boolean) => void;
-	next: () => void;
 };
 
 // Create safe requestIdleCallback function that falls back to setTimeout
@@ -110,8 +105,7 @@ export default class SwupPreloadPlugin extends Plugin {
 		this.preload = this.preload.bind(this);
 
 		// Create global priority queue
-		const [add, next] = throttles(this.options.throttle);
-		this.queue = { add, next };
+		this.queue = createQueue(this.options.throttle);
 	}
 
 	mount() {
