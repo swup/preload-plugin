@@ -2,6 +2,10 @@
 
 <!-- ## [Unreleased] -->
 
+## [3.2.4] - 2023-08-31
+
+- Inline queue implementation to fix webpack bundling error
+
 ## [3.2.3] - 2023-08-24
 
 - Add fallback if `requestIdleCallback` is unavailable
@@ -95,8 +99,9 @@
 
 - Initial release
 
-[Unreleased]: https://github.com/swup/preload-plugin/compare/3.2.3...HEAD
+[Unreleased]: https://github.com/swup/preload-plugin/compare/3.2.4...HEAD
 
+[3.2.4]: https://github.com/swup/preload-plugin/releases/tag/3.2.4
 [3.2.3]: https://github.com/swup/preload-plugin/releases/tag/3.2.3
 [3.2.2]: https://github.com/swup/preload-plugin/releases/tag/3.2.2
 [3.2.1]: https://github.com/swup/preload-plugin/releases/tag/3.2.1
