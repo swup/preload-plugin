@@ -10,7 +10,9 @@ declare module 'swup' {
 		 * - a URL or an array of URLs
 		 * - a link element or an array of link elements
 		 */
-		preload?: (input: string | string[] | HTMLAnchorElement | HTMLAnchorElement[]) => Promise<PageData | (PageData | void)[] | void>;
+		preload?: (
+			input: string | string[] | HTMLAnchorElement | HTMLAnchorElement[]
+		) => Promise<PageData | (PageData | void)[] | void>;
 		/**
 		 * Preload any links on the current page manually marked for preloading.
 		 */
@@ -96,7 +98,10 @@ export default class SwupPreloadPlugin extends Plugin {
 			this.options.preloadVisibleLinks = {
 				...this.options.preloadVisibleLinks,
 				...preloadVisibleLinks,
-				enabled: typeof preloadVisibleLinks.enabled === 'boolean' ? preloadVisibleLinks.enabled : true
+				enabled:
+					typeof preloadVisibleLinks.enabled === 'boolean'
+						? preloadVisibleLinks.enabled
+						: true
 			};
 		} else {
 			this.options.preloadVisibleLinks.enabled = Boolean(preloadVisibleLinks);
@@ -127,8 +132,18 @@ export default class SwupPreloadPlugin extends Plugin {
 		// Register handlers for preloading on attention: mouseenter, touchstart, focus
 		const { linkSelector: selector } = swup.options;
 		const opts = { passive: true, capture: true };
-		this.mouseEnterDelegate = swup.delegateEvent(selector, 'mouseenter', this.onMouseEnter, opts);
-		this.touchStartDelegate = swup.delegateEvent(selector, 'touchstart', this.onTouchStart, opts);
+		this.mouseEnterDelegate = swup.delegateEvent(
+			selector,
+			'mouseenter',
+			this.onMouseEnter,
+			opts
+		);
+		this.touchStartDelegate = swup.delegateEvent(
+			selector,
+			'touchstart',
+			this.onTouchStart,
+			opts
+		);
 		this.focusDelegate = swup.delegateEvent(selector, 'focus', this.onFocus, opts);
 
 		// Inject custom promise whenever a page is loaded
@@ -231,7 +246,10 @@ export default class SwupPreloadPlugin extends Plugin {
 	async preload(urls: string[], options?: PreloadOptions): Promise<(PageData | void)[]>;
 	async preload(el: HTMLAnchorElement, options?: PreloadOptions): Promise<PageData | void>;
 	async preload(els: HTMLAnchorElement[], options?: PreloadOptions): Promise<(PageData | void)[]>;
-	async preload(input: string | HTMLAnchorElement, options?: PreloadOptions): Promise<PageData | void>;
+	async preload(
+		input: string | HTMLAnchorElement,
+		options?: PreloadOptions
+	): Promise<PageData | void>;
 	async preload(
 		input: string | string[] | HTMLAnchorElement | HTMLAnchorElement[],
 		options: PreloadOptions = {}
@@ -317,15 +335,18 @@ export default class SwupPreloadPlugin extends Plugin {
 		const visibleLinks = new Set<string>();
 
 		// Create an observer to add/remove links when they enter the viewport
-		const observer = new IntersectionObserver((entries) => {
-			entries.forEach((entry) => {
-				if (entry.isIntersecting) {
-					add(entry.target as HTMLAnchorElement);
-				} else {
-					remove(entry.target as HTMLAnchorElement);
-				}
-			});
-		}, { threshold });
+		const observer = new IntersectionObserver(
+			(entries) => {
+				entries.forEach((entry) => {
+					if (entry.isIntersecting) {
+						add(entry.target as HTMLAnchorElement);
+					} else {
+						remove(entry.target as HTMLAnchorElement);
+					}
+				});
+			},
+			{ threshold }
+		);
 
 		// Preload link if it is still visible after a configurable timeout
 		const add = (el: HTMLAnchorElement) => {
