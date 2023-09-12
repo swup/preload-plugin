@@ -95,7 +95,8 @@ export default class SwupPreloadPlugin extends Plugin {
 		if (typeof preloadVisibleLinks === 'object') {
 			this.options.preloadVisibleLinks = {
 				...this.options.preloadVisibleLinks,
-				...preloadVisibleLinks
+				...preloadVisibleLinks,
+				enabled: typeof preloadVisibleLinks.enabled === 'boolean' ? preloadVisibleLinks.enabled : true
 			};
 		} else {
 			this.options.preloadVisibleLinks.enabled = Boolean(preloadVisibleLinks);
