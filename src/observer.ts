@@ -19,7 +19,7 @@ export default function createObserver({
 	callback: (el: HTMLAnchorElement) => void;
 	filter: (el: HTMLAnchorElement) => boolean;
 }): Observer {
-	const visibleLinks = new Map<string, WeakSet<HTMLAnchorElement>>();
+	const visibleLinks = new Map<string, Set<HTMLAnchorElement>>();
 
 	// Create an observer to add/remove links when they enter the viewport
 	const observer = new IntersectionObserver(
@@ -37,15 +37,15 @@ export default function createObserver({
 
 	// Preload link if it is still visible after a configurable timeout
 	const add = (el: HTMLAnchorElement) => {
-		visibleLinks.set(el.href, visibleLinks.get(el.href) ?? new WeakSet());
+		visibleLinks.set(el.href, visibleLinks.get(el.href) ?? new Set());
 		visibleLinks.get(el.href)!.add(el);
 
 		setTimeout(() => {
-			const set = visibleLinks.get(el.href);
-			if (set && set.has(el)) {
+			const links = visibleLinks.get(el.href);
+			if (links?.size) {
 				callback(el);
 				observer.unobserve(el);
-				set.delete(el);
+				links.delete(el);
 			}
 		}, delay);
 	};
