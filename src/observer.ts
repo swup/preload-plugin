@@ -1,4 +1,4 @@
-import { whenIdle } from "./util.js";
+import { whenIdle } from './util.js';
 
 export type Observer = {
 	start: () => void;
@@ -6,12 +6,18 @@ export type Observer = {
 	update: () => void;
 };
 
-export default function createObserver({ threshold, delay, containers, callback, filter }: {
-	threshold: number,
-	delay: number,
-	containers: string[],
-	callback: (el: HTMLAnchorElement) => void,
-	filter: (el: HTMLAnchorElement) => boolean
+export default function createObserver({
+	threshold,
+	delay,
+	containers,
+	callback,
+	filter
+}: {
+	threshold: number;
+	delay: number;
+	containers: string[];
+	callback: (el: HTMLAnchorElement) => void;
+	filter: (el: HTMLAnchorElement) => boolean;
 }): Observer {
 	const visibleLinks = new Set<string>();
 

@@ -21,7 +21,6 @@ export function deviceSupportsHover() {
 	return window.matchMedia('(hover: hover)').matches;
 }
 
-
 /**
  * Safe requestIdleCallback function that falls back to setTimeout
  */
