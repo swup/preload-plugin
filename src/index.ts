@@ -3,6 +3,7 @@ import { getCurrentUrl, Handler, Location } from 'swup';
 import type { DelegateEvent, DelegateEventHandler, DelegateEventUnsubscribe, PageData } from 'swup';
 import { deviceSupportsHover, networkSupportsPreloading, whenIdle } from './util.js';
 import createQueue, { Queue } from './queue.js';
+import createObserver, { Observer } from './observer.js';
 
 declare module 'swup' {
 	export interface Swup {
@@ -77,8 +78,8 @@ export default class SwupPreloadPlugin extends Plugin {
 	options: PluginOptions;
 
 	protected queue: Queue;
+	protected preloadObserver?: Observer;
 	protected preloadPromises = new Map<string, Promise<PageData | void>>();
-	protected preloadObserver?: { stop: () => void; update: () => void };
 
 	protected mouseEnterDelegate?: DelegateEventUnsubscribe;
 	protected touchStartDelegate?: DelegateEventUnsubscribe;
@@ -327,57 +328,10 @@ export default class SwupPreloadPlugin extends Plugin {
 		}
 
 		const { threshold, delay, containers } = this.options.preloadVisibleLinks;
-		const visibleLinks = new Set<string>();
-
-		// Create an observer to add/remove links when they enter the viewport
-		const observer = new IntersectionObserver(
-			(entries) => {
-				entries.forEach((entry) => {
-					if (entry.isIntersecting) {
-						add(entry.target as HTMLAnchorElement);
-					} else {
-						remove(entry.target as HTMLAnchorElement);
-					}
-				});
-			},
-			{ threshold }
-		);
-
-		// Preload link if it is still visible after a configurable timeout
-		const add = (el: HTMLAnchorElement) => {
-			visibleLinks.add(el.href);
-			setTimeout(() => {
-				if (visibleLinks.has(el.href)) {
-					this.preload(el);
-					observer.unobserve(el);
-				}
-			}, delay);
-		};
-
-		// Remove link from list of visible links
-		const remove = (el: HTMLAnchorElement) => visibleLinks.delete(el.href);
-
-		// Clear list of visible links
-		const clear = () => visibleLinks.clear();
-
-		// Scan DOM for preloadable links and start observing their visibility
-		const observe = () => {
-			whenIdle(() => {
-				const selector = containers.map((root) => `${root} a[href]`).join(', ');
-				const links = Array.from(document.querySelectorAll<HTMLAnchorElement>(selector));
-				links
-					.filter((el) => this.shouldPreload(el.href, { el }))
-					.forEach((el) => observer.observe(el));
-			});
-		};
-
-		// Begin observing
-		observe();
-
-		this.preloadObserver = {
-			stop: () => observer.disconnect(),
-			update: () => (clear(), observe())
-		};
+		const callback = (el: HTMLAnchorElement) => this.preload(el);
+		const filter = (el: HTMLAnchorElement) => this.shouldPreload(el.href, { el });
+		this.preloadObserver = createObserver({ threshold, delay, containers, callback, filter });
+		this.preloadObserver.start();
 	}
 
 	/**
