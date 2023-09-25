@@ -1,7 +1,8 @@
 import Plugin from '@swup/plugin';
 import { getCurrentUrl, Handler, Location } from 'swup';
 import type { DelegateEvent, DelegateEventHandler, DelegateEventUnsubscribe, PageData } from 'swup';
-import createQueue, { Queue } from './queue.js';
+
+import Queue from './queue.js';
 
 declare module 'swup' {
 	export interface Swup {
@@ -78,8 +79,7 @@ export default class SwupPreloadPlugin extends Plugin {
 
 	options: PluginOptions;
 
-	protected queue: Queue;
-	protected preloadPromises = new Map<string, Promise<PageData | void>>();
+	protected preloadQueue: Queue<PageData | void>;
 	protected preloadObserver?: { stop: () => void; update: () => void };
 
 	protected mouseEnterDelegate?: DelegateEventUnsubscribe;
@@ -107,8 +107,8 @@ export default class SwupPreloadPlugin extends Plugin {
 		// Bind public methods
 		this.preload = this.preload.bind(this);
 
-		// Create global priority queue
-		this.queue = createQueue(this.options.throttle);
+		// Create priority queue
+		this.preloadQueue = new Queue<PageData | void>(this.options.throttle);
 	}
 
 	mount() {
@@ -168,7 +168,7 @@ export default class SwupPreloadPlugin extends Plugin {
 		this.swup.preload = undefined;
 		this.swup.preloadLinks = undefined;
 
-		this.preloadPromises.clear();
+		this.preloadQueue.clear();
 
 		this.mouseEnterDelegate?.destroy();
 		this.touchStartDelegate?.destroy();
@@ -182,8 +182,8 @@ export default class SwupPreloadPlugin extends Plugin {
 	 */
 	protected onPageLoad: Handler<'page:load'> = (visit, args, defaultHandler) => {
 		const { url } = visit.to;
-		if (url && this.preloadPromises.has(url)) {
-			return this.preloadPromises.get(url);
+		if (url && this.preloadQueue.has(url)) {
+			return this.preloadQueue.get(url);
 		}
 		return defaultHandler?.(visit, args);
 	};
@@ -274,8 +274,8 @@ export default class SwupPreloadPlugin extends Plugin {
 		}
 
 		// Already preloading? Return existing promise
-		if (this.preloadPromises.has(url)) {
-			return this.preloadPromises.get(url);
+		if (this.preloadQueue.has(url)) {
+			return this.preloadQueue.get(url);
 		}
 
 		// Should we preload?
@@ -285,21 +285,7 @@ export default class SwupPreloadPlugin extends Plugin {
 
 		// Queue the preload with either low or high priority
 		// The actual preload will happen when a spot in the queue is available
-		const queuedPromise = new Promise<PageData | void>((resolve) => {
-			this.queue.add(() => {
-				this.performPreload(url)
-					.catch(() => {})
-					.then((page) => resolve(page))
-					.finally(() => {
-						this.queue.next();
-						this.preloadPromises.delete(url);
-					});
-			}, priority);
-		});
-
-		this.preloadPromises.set(url, queuedPromise);
-
-		return queuedPromise;
+		return this.preloadQueue.add(url, () => this.performPreload(url), priority);
 	}
 
 	/**
@@ -402,7 +388,7 @@ export default class SwupPreloadPlugin extends Plugin {
 		// Already in cache?
 		if (this.swup.cache.has(url)) return false;
 		// Already preloading?
-		if (this.preloadPromises.has(url)) return false;
+		if (this.preloadQueue.has(url)) return false;
 		// Should be ignored anyway?
 		if (this.swup.shouldIgnoreVisit(href, { el })) return false;
 		// Special condition for links: points to current page?
@@ -414,10 +400,14 @@ export default class SwupPreloadPlugin extends Plugin {
 	/**
 	 * Perform the actual preload fetch and trigger the preload hook.
 	 */
-	protected async performPreload(url: string): Promise<PageData> {
-		const page = await this.swup.fetchPage(url);
-		await this.swup.hooks.call('page:preload', { page });
-		return page;
+	protected async performPreload(url: string): Promise<PageData | void> {
+		try {
+			const page = await this.swup.fetchPage(url);
+			await this.swup.hooks.call('page:preload', { page });
+			return page;
+		} catch (error) {
+			return;
+		}
 	}
 
 	/**
