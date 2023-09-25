@@ -1,6 +1,7 @@
 import Plugin from '@swup/plugin';
 import { getCurrentUrl, Handler, Location } from 'swup';
 import type { DelegateEvent, DelegateEventHandler, DelegateEventUnsubscribe, PageData } from 'swup';
+import { deviceSupportsHover, networkSupportsPreloading, whenIdle } from './util.js';
 import createQueue, { Queue } from './queue.js';
 
 declare module 'swup' {
@@ -55,9 +56,6 @@ type PreloadOptions = {
 	/** Priority of this preload: `true` for high, `false` for low. */
 	priority?: boolean;
 };
-
-// Create safe requestIdleCallback function that falls back to setTimeout
-const whenIdle = window.requestIdleCallback || ((cb) => setTimeout(cb, 1));
 
 export default class SwupPreloadPlugin extends Plugin {
 	name = 'SwupPreloadPlugin';
@@ -196,7 +194,7 @@ export default class SwupPreloadPlugin extends Plugin {
 		if (event.target !== event.delegateTarget) return;
 
 		// Return early on devices that don't support hover
-		if (!this.deviceSupportsHover()) return;
+		if (!deviceSupportsHover()) return;
 
 		const el = event.delegateTarget;
 		if (!(el instanceof HTMLAnchorElement)) return;
@@ -210,7 +208,7 @@ export default class SwupPreloadPlugin extends Plugin {
 	 */
 	protected onTouchStart: DelegateEventHandler = (event) => {
 		// Return early on devices that support hover
-		if (this.deviceSupportsHover()) return;
+		if (deviceSupportsHover()) return;
 
 		const el = event.delegateTarget;
 		if (!(el instanceof HTMLAnchorElement)) return;
@@ -398,7 +396,7 @@ export default class SwupPreloadPlugin extends Plugin {
 		const { url, href } = Location.fromUrl(location);
 
 		// Network too slow?
-		if (!this.networkSupportsPreloading()) return false;
+		if (!networkSupportsPreloading()) return false;
 		// Already in cache?
 		if (this.swup.cache.has(url)) return false;
 		// Already preloading?
@@ -418,28 +416,5 @@ export default class SwupPreloadPlugin extends Plugin {
 		const page = await this.swup.fetchPage(url);
 		await this.swup.hooks.call('page:preload', { page });
 		return page;
-	}
-
-	/**
-	 * Check if the user's connection is configured and fast enough
-	 * to preload data in the background.
-	 */
-	protected networkSupportsPreloading(): boolean {
-		if (navigator.connection) {
-			if (navigator.connection.saveData) {
-				return false;
-			}
-			if (navigator.connection.effectiveType?.endsWith('2g')) {
-				return false;
-			}
-		}
-		return true;
-	}
-
-	/**
-	 * Does this device support true hover/pointer interactions?
-	 */
-	protected deviceSupportsHover() {
-		return window.matchMedia('(hover: hover)').matches;
 	}
 }
