@@ -37,15 +37,16 @@ export default function createObserver({
 
 	// Preload link if it is still visible after a configurable timeout
 	const add = (el: HTMLAnchorElement) => {
-		visibleLinks.set(el.href, visibleLinks.get(el.href) ?? new Set());
-		visibleLinks.get(el.href)!.add(el);
+		const elements = visibleLinks.get(el.href) ?? new Set();
+		visibleLinks.set(el.href, elements);
+		elements.add(el);
 
 		setTimeout(() => {
-			const links = visibleLinks.get(el.href);
-			if (links?.size) {
+			const elements = visibleLinks.get(el.href);
+			if (elements?.size) {
 				callback(el);
 				observer.unobserve(el);
-				links.delete(el);
+				elements.delete(el);
 			}
 		}, delay);
 	};
