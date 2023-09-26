@@ -119,7 +119,9 @@ new SwupPreloadPlugin({
     /** How long a link must be visible to preload it, in milliseconds */
     delay: 500,
     /** Containers to look for links in */
-    containers: ['body']
+    containers: ['body'],
+    /** Callback for opting out selected elements from preloading */
+    ignore: (el) => false
   }
 })
 ```
