@@ -1,7 +1,9 @@
 import Plugin from '@swup/plugin';
 import { getCurrentUrl, Handler, Location } from 'swup';
 import type { DelegateEvent, DelegateEventHandler, DelegateEventUnsubscribe, PageData } from 'swup';
+import { deviceSupportsHover, networkSupportsPreloading, whenIdle } from './util.js';
 import createQueue, { Queue } from './queue.js';
+import createObserver, { Observer } from './observer.js';
 
 declare module 'swup' {
 	export interface Swup {
@@ -56,9 +58,6 @@ type PreloadOptions = {
 	priority?: boolean;
 };
 
-// Create safe requestIdleCallback function that falls back to setTimeout
-const whenIdle = window.requestIdleCallback || ((cb) => setTimeout(cb, 1));
-
 export default class SwupPreloadPlugin extends Plugin {
 	name = 'SwupPreloadPlugin';
 
@@ -79,8 +78,8 @@ export default class SwupPreloadPlugin extends Plugin {
 	options: PluginOptions;
 
 	protected queue: Queue;
+	protected preloadObserver?: Observer;
 	protected preloadPromises = new Map<string, Promise<PageData | void>>();
-	protected preloadObserver?: { stop: () => void; update: () => void };
 
 	protected mouseEnterDelegate?: DelegateEventUnsubscribe;
 	protected touchStartDelegate?: DelegateEventUnsubscribe;
@@ -196,7 +195,7 @@ export default class SwupPreloadPlugin extends Plugin {
 		if (event.target !== event.delegateTarget) return;
 
 		// Return early on devices that don't support hover
-		if (!this.deviceSupportsHover()) return;
+		if (!deviceSupportsHover()) return;
 
 		const el = event.delegateTarget;
 		if (!(el instanceof HTMLAnchorElement)) return;
@@ -210,7 +209,7 @@ export default class SwupPreloadPlugin extends Plugin {
 	 */
 	protected onTouchStart: DelegateEventHandler = (event) => {
 		// Return early on devices that support hover
-		if (this.deviceSupportsHover()) return;
+		if (deviceSupportsHover()) return;
 
 		const el = event.delegateTarget;
 		if (!(el instanceof HTMLAnchorElement)) return;
@@ -329,57 +328,10 @@ export default class SwupPreloadPlugin extends Plugin {
 		}
 
 		const { threshold, delay, containers } = this.options.preloadVisibleLinks;
-		const visibleLinks = new Set<string>();
-
-		// Create an observer to add/remove links when they enter the viewport
-		const observer = new IntersectionObserver(
-			(entries) => {
-				entries.forEach((entry) => {
-					if (entry.isIntersecting) {
-						add(entry.target as HTMLAnchorElement);
-					} else {
-						remove(entry.target as HTMLAnchorElement);
-					}
-				});
-			},
-			{ threshold }
-		);
-
-		// Preload link if it is still visible after a configurable timeout
-		const add = (el: HTMLAnchorElement) => {
-			visibleLinks.add(el.href);
-			setTimeout(() => {
-				if (visibleLinks.has(el.href)) {
-					this.preload(el);
-					observer.unobserve(el);
-				}
-			}, delay);
-		};
-
-		// Remove link from list of visible links
-		const remove = (el: HTMLAnchorElement) => visibleLinks.delete(el.href);
-
-		// Clear list of visible links
-		const clear = () => visibleLinks.clear();
-
-		// Scan DOM for preloadable links and start observing their visibility
-		const observe = () => {
-			whenIdle(() => {
-				const selector = containers.map((root) => `${root} a[href]`).join(', ');
-				const links = Array.from(document.querySelectorAll<HTMLAnchorElement>(selector));
-				links
-					.filter((el) => this.shouldPreload(el.href, { el }))
-					.forEach((el) => observer.observe(el));
-			});
-		};
-
-		// Begin observing
-		observe();
-
-		this.preloadObserver = {
-			stop: () => observer.disconnect(),
-			update: () => (clear(), observe())
-		};
+		const callback = (el: HTMLAnchorElement) => this.preload(el);
+		const filter = (el: HTMLAnchorElement) => this.shouldPreload(el.href, { el });
+		this.preloadObserver = createObserver({ threshold, delay, containers, callback, filter });
+		this.preloadObserver.start();
 	}
 
 	/**
@@ -398,7 +350,7 @@ export default class SwupPreloadPlugin extends Plugin {
 		const { url, href } = Location.fromUrl(location);
 
 		// Network too slow?
-		if (!this.networkSupportsPreloading()) return false;
+		if (!networkSupportsPreloading()) return false;
 		// Already in cache?
 		if (this.swup.cache.has(url)) return false;
 		// Already preloading?
@@ -418,28 +370,5 @@ export default class SwupPreloadPlugin extends Plugin {
 		const page = await this.swup.fetchPage(url);
 		await this.swup.hooks.call('page:preload', { page });
 		return page;
-	}
-
-	/**
-	 * Check if the user's connection is configured and fast enough
-	 * to preload data in the background.
-	 */
-	protected networkSupportsPreloading(): boolean {
-		if (navigator.connection) {
-			if (navigator.connection.saveData) {
-				return false;
-			}
-			if (navigator.connection.effectiveType?.endsWith('2g')) {
-				return false;
-			}
-		}
-		return true;
-	}
-
-	/**
-	 * Does this device support true hover/pointer interactions?
-	 */
-	protected deviceSupportsHover() {
-		return window.matchMedia('(hover: hover)').matches;
 	}
 }
