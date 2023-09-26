@@ -35,6 +35,8 @@ type VisibleLinkPreloadOptions = {
 	delay: number;
 	/** Containers to look for links in */
 	containers: string[];
+	/** Callback for opting out selected elements from preloading */
+	ignore: (el: HTMLAnchorElement) => boolean;
 };
 
 export type PluginOptions = {
@@ -71,7 +73,8 @@ export default class SwupPreloadPlugin extends Plugin {
 			enabled: false,
 			threshold: 0.2,
 			delay: 500,
-			containers: ['body']
+			containers: ['body'],
+			ignore: () => false
 		}
 	};
 
@@ -329,7 +332,12 @@ export default class SwupPreloadPlugin extends Plugin {
 
 		const { threshold, delay, containers } = this.options.preloadVisibleLinks;
 		const callback = (el: HTMLAnchorElement) => this.preload(el);
-		const filter = (el: HTMLAnchorElement) => this.shouldPreload(el.href, { el });
+		const filter = (el: HTMLAnchorElement) => {
+			/** First, run the custom callback */
+			if (this.options.preloadVisibleLinks.ignore(el)) return false;
+			/** Second, run all default checks */
+			return this.shouldPreload(el.href, { el });
+		};
 		this.preloadObserver = createObserver({ threshold, delay, containers, callback, filter });
 		this.preloadObserver.start();
 	}
