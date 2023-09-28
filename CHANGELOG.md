@@ -103,7 +103,7 @@
 
 - Initial release
 
-[3.0.3]: https://github.com/swup/preload-plugin/releases/tag/3.0.3
+[3.3.0]: https://github.com/swup/preload-plugin/releases/tag/3.3.0
 [3.2.4]: https://github.com/swup/preload-plugin/releases/tag/3.2.4
 [3.2.3]: https://github.com/swup/preload-plugin/releases/tag/3.2.3
 [3.2.2]: https://github.com/swup/preload-plugin/releases/tag/3.2.2
