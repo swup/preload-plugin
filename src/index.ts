@@ -1,6 +1,12 @@
 import Plugin from '@swup/plugin';
 import { getCurrentUrl, Location } from 'swup';
-import type { DelegateEvent, DelegateEventHandler, DelegateEventUnsubscribe, PageData, HookDefaultHandler } from 'swup';
+import type {
+	DelegateEvent,
+	DelegateEventHandler,
+	DelegateEventUnsubscribe,
+	PageData,
+	HookDefaultHandler
+} from 'swup';
 import { deviceSupportsHover, networkSupportsPreloading, whenIdle } from './util.js';
 import createQueue, { Queue } from './queue.js';
 import createObserver, { Observer } from './observer.js';
