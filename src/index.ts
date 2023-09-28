@@ -1,6 +1,12 @@
 import Plugin from '@swup/plugin';
-import { getCurrentUrl, Handler, Location } from 'swup';
-import type { DelegateEvent, DelegateEventHandler, DelegateEventUnsubscribe, PageData } from 'swup';
+import { getCurrentUrl, Location } from 'swup';
+import type {
+	DelegateEvent,
+	DelegateEventHandler,
+	DelegateEventUnsubscribe,
+	PageData,
+	HookDefaultHandler
+} from 'swup';
 import { deviceSupportsHover, networkSupportsPreloading, whenIdle } from './util.js';
 import createQueue, { Queue } from './queue.js';
 import createObserver, { Observer } from './observer.js';
@@ -182,12 +188,12 @@ export default class SwupPreloadPlugin extends Plugin {
 	/**
 	 * Before core page load: return existing preload promise if available.
 	 */
-	protected onPageLoad: Handler<'page:load'> = (visit, args, defaultHandler) => {
+	protected onPageLoad: HookDefaultHandler<'page:load'> = (visit, args, defaultHandler) => {
 		const { url } = visit.to;
 		if (url && this.preloadPromises.has(url)) {
-			return this.preloadPromises.get(url);
+			return this.preloadPromises.get(url) as Promise<PageData>;
 		}
-		return defaultHandler?.(visit, args);
+		return defaultHandler!(visit, args);
 	};
 
 	/**
