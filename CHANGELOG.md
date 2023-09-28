@@ -1,6 +1,10 @@
 # Changelog
 
-<!-- ## [Unreleased] -->
+## [3.3.0] - 2023-09-28
+
+- Use `@swup/cli` for bundling
+- New option `preloadVisibleLinks.ignore`
+- Fix duplicate links not being preloaded
 
 ## [3.2.4] - 2023-08-31
 
@@ -99,8 +103,7 @@
 
 - Initial release
 
-[Unreleased]: https://github.com/swup/preload-plugin/compare/3.2.4...HEAD
-
+[3.0.3]: https://github.com/swup/preload-plugin/releases/tag/3.0.3
 [3.2.4]: https://github.com/swup/preload-plugin/releases/tag/3.2.4
 [3.2.3]: https://github.com/swup/preload-plugin/releases/tag/3.2.3
 [3.2.2]: https://github.com/swup/preload-plugin/releases/tag/3.2.2
