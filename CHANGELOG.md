@@ -1,6 +1,10 @@
 # Changelog
 
-## [3.3.0] - 2023-09-28
+## [3.2.6] - 2023-10-13
+
+- Fix `swup.preload` function signature
+
+## [3.2.5] - 2023-09-28
 
 - Use `@swup/cli` for bundling
 - New option `preloadVisibleLinks.ignore`
@@ -103,7 +107,8 @@
 
 - Initial release
 
-[3.3.0]: https://github.com/swup/preload-plugin/releases/tag/3.3.0
+[3.2.6]: https://github.com/swup/preload-plugin/releases/tag/3.2.6
+[3.2.5]: https://github.com/swup/preload-plugin/releases/tag/3.2.5
 [3.2.4]: https://github.com/swup/preload-plugin/releases/tag/3.2.4
 [3.2.3]: https://github.com/swup/preload-plugin/releases/tag/3.2.3
 [3.2.2]: https://github.com/swup/preload-plugin/releases/tag/3.2.2
