@@ -133,30 +133,30 @@ export default class SwupPreloadPlugin extends Plugin {
 		swup.preloadLinks = this.preloadLinks;
 
 		// Register handlers for preloading on attention: mouseenter, touchstart, focus
-		const { linkSelector: selector } = swup.options;
-		const opts = { passive: true, capture: true };
-		this.mouseEnterDelegate = swup.delegateEvent(
-			selector,
-			'mouseenter',
-			this.onMouseEnter,
-			opts
-		);
-		this.touchStartDelegate = swup.delegateEvent(
-			selector,
-			'touchstart',
-			this.onTouchStart,
-			opts
-		);
-		this.focusDelegate = swup.delegateEvent(selector, 'focus', this.onFocus, opts);
+		if (this.options.preloadHoveredLinks) {
+			const { linkSelector: selector } = swup.options;
+			const opts = { passive: true, capture: true };
+			this.mouseEnterDelegate = swup.delegateEvent(
+				selector,
+				'mouseenter',
+				this.onMouseEnter,
+				opts
+			);
+			this.touchStartDelegate = swup.delegateEvent(
+				selector,
+				'touchstart',
+				this.onTouchStart,
+				opts
+			);
+			this.focusDelegate = swup.delegateEvent(selector, 'focus', this.onFocus, opts);
+		}
 
 		// Inject custom promise whenever a page is loaded
 		this.replace('page:load', this.onPageLoad);
 
 		// Preload links with [data-swup-preload] attr
-		if (this.options.preloadHoveredLinks) {
-			this.preloadLinks();
-			this.on('page:view', () => this.preloadLinks());
-		}
+		this.preloadLinks();
+		this.on('page:view', () => this.preloadLinks());
 
 		// Preload visible links in viewport
 		if (this.options.preloadVisibleLinks.enabled) {
