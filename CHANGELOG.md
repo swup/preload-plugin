@@ -1,5 +1,9 @@
 # Changelog
 
+## [3.2.7] - 2023-10-20
+
+- Fix `options.preloadHoveredLinks`
+
 ## [3.2.6] - 2023-10-13
 
 - Fix `swup.preload` function signature
@@ -107,6 +111,7 @@
 
 - Initial release
 
+[3.2.7]: https://github.com/swup/preload-plugin/releases/tag/3.2.7
 [3.2.6]: https://github.com/swup/preload-plugin/releases/tag/3.2.6
 [3.2.5]: https://github.com/swup/preload-plugin/releases/tag/3.2.5
 [3.2.4]: https://github.com/swup/preload-plugin/releases/tag/3.2.4
