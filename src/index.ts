@@ -132,25 +132,6 @@ export default class SwupPreloadPlugin extends Plugin {
 		swup.preload = this.preload;
 		swup.preloadLinks = this.preloadLinks;
 
-		// Register handlers for preloading on attention: mouseenter, touchstart, focus
-		if (this.options.preloadHoveredLinks) {
-			const { linkSelector: selector } = swup.options;
-			const opts = { passive: true, capture: true };
-			this.mouseEnterDelegate = swup.delegateEvent(
-				selector,
-				'mouseenter',
-				this.onMouseEnter,
-				opts
-			);
-			this.touchStartDelegate = swup.delegateEvent(
-				selector,
-				'touchstart',
-				this.onTouchStart,
-				opts
-			);
-			this.focusDelegate = swup.delegateEvent(selector, 'focus', this.onFocus, opts);
-		}
-
 		// Inject custom promise whenever a page is loaded
 		this.replace('page:load', this.onPageLoad);
 
@@ -162,6 +143,11 @@ export default class SwupPreloadPlugin extends Plugin {
 		if (this.options.preloadVisibleLinks.enabled) {
 			this.preloadVisibleLinks();
 			this.on('page:view', () => this.preloadVisibleLinks());
+		}
+
+		// Preload links on attention
+		if (this.options.preloadHoveredLinks) {
+			this.preloadLinksOnAttention();
 		}
 
 		// Cache unmodified DOM of initial/current page
@@ -321,6 +307,32 @@ export default class SwupPreloadPlugin extends Plugin {
 			const links = Array.from(document.querySelectorAll<HTMLAnchorElement>(selector));
 			links.forEach((el) => this.preload(el));
 		});
+	}
+
+	/**
+	 * Register handlers for preloading on attention:
+	 *  - mouseenter
+	 *  - touchstart
+	 *  - focus
+	 */
+	protected preloadLinksOnAttention() {
+		const { swup } = this;
+
+		const { linkSelector: selector } = swup.options;
+		const opts = { passive: true, capture: true };
+		this.mouseEnterDelegate = swup.delegateEvent(
+			selector,
+			'mouseenter',
+			this.onMouseEnter,
+			opts
+		);
+		this.touchStartDelegate = swup.delegateEvent(
+			selector,
+			'touchstart',
+			this.onTouchStart,
+			opts
+		);
+		this.focusDelegate = swup.delegateEvent(selector, 'focus', this.onFocus, opts);
 	}
 
 	/**
