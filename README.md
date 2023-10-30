@@ -77,7 +77,7 @@ To preload all links in a container, mark the container with `data-swup-preload-
 
 Preload links as they enter the viewport. Not enabled by default.
 
-See the [preloadVisibleLinks](#preloadvisiblelinks) option for details.
+See the [preloadVisibleLinks](#preload-visible-links) option for details.
 
 ### Preload a list of URLs
 
