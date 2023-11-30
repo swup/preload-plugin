@@ -17,39 +17,60 @@ describe('return', () => {
 	});
 });
 
-describe('usage', () => {
+describe('sequencing', () => {
 	it('runs callbacks sequentially', async () => {
-		let num = 5;
+		let size = 1;
+		let items = 5;
 		let duration = 100;
 		let elapsed = 0;
 
-		const { add, next } = createQueue();
+		const { add, next } = createQueue(size);
 		const timer = createTimer();
 		const test = () => sleep(duration).then(() => (elapsed = timer())).then(next);
-		for (let i = 0; i < num; i++) {
-			add(() => test()); // add different function with each iteration
+		for (let i = 0; i < items; i++) {
+			add(() => test()); // add different function with each iteration = sequential
 		}
-		await sleep((num + 1) * duration);
+		await sleep((items + 1) * duration);
 
-		const [min, max] = pad(num * duration);
+		const [min, max] = pad(items * duration);
 		expect(elapsed).to.be.gte(min);
 		expect(elapsed).to.be.lte(max);
 	});
 
 	it('debounces repeated calls', async () => {
-		let num = 5;
+		let size = 1;
+		let items = 5;
 		let duration = 100;
 		let elapsed = 0;
 
-		const { add, next } = createQueue();
+		const { add, next } = createQueue(size);
 		const timer = createTimer();
 		const test = () => sleep(duration).then(() => (elapsed = timer())).then(next);
-		for (let i = 0; i < num; i++) {
-			add(test); // add identical function multiple times
+		for (let i = 0; i < items; i++) {
+			add(test); // add identical function multiple times = ignore/debounce
 		}
-		await sleep((num + 1) * duration);
+		await sleep((items + 1) * duration);
 
 		const [min, max] = pad(duration);
+		expect(elapsed).to.be.gte(min);
+		expect(elapsed).to.be.lte(max);
+	});
+
+	it('allow custom queue size', async () => {
+		let size = 5;
+		let items = 5;
+		let duration = 100;
+		let elapsed = 0;
+
+		const { add, next } = createQueue(size);
+		const timer = createTimer();
+		const test = () => sleep(duration).then(() => (elapsed = timer())).then(next);
+		for (let i = 0; i < items; i++) {
+			add(() => test()); // add different function with each iteration = sequential
+		}
+		await sleep((items + 1) * duration);
+
+		const [min, max] = pad(items * duration / size);
 		expect(elapsed).to.be.gte(min);
 		expect(elapsed).to.be.lte(max);
 	});
