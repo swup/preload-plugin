@@ -1,17 +1,22 @@
+import { fileURLToPath } from 'node:url';
+import path from 'node:path';
 import { defineConfig, devices } from '@playwright/test';
 
 const baseURL = 'http://localhost:8274';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 /**
  * See https://playwright.dev/docs/test-configuration.
  */
 export default defineConfig({
 	/* Run this file before starting the tests */
-	globalSetup: require.resolve('./playwright.setup.ts'),
+	globalSetup: path.resolve(__dirname, './playwright.setup.ts'),
 	/* Run this file after all the tests have finished */
-	// globalTeardown: require.resolve('./playwright.teardown.ts'),
+	// globalTeardown: path.resolve(__dirname, './playwright.teardown.ts'),
 	/* Directory containing the test files */
-	testDir: '../playwright',
+	testDir: '../functional',
 	/* Folder for test artifacts: screenshots, videos, ... */
 	outputDir: '../results',
 	/* Timeout individual tests after 5 seconds */

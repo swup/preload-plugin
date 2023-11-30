@@ -1,6 +1,6 @@
 {
   "public": "tests/fixtures",
-  "cleanUrls": true,
+  "cleanUrls": false,
   "redirects": [
     { "source": "/redirect-2.html", "destination": "/redirect-3.html" }
   ]
