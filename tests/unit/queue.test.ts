@@ -18,22 +18,40 @@ describe('return', () => {
 });
 
 describe('usage', () => {
-	it('debounces repeated calls', async () => {
+	it('runs callbacks sequentially', async () => {
 		let num = 5;
-		let step = 500;
-		let last = 0;
+		let duration = 100;
+		let elapsed = 0;
 
 		const { add, next } = createQueue();
 		const timer = createTimer();
-		const test = () => sleep(step).then(() => (last = timer())).then(next);
+		const test = () => sleep(duration).then(() => (elapsed = timer())).then(next);
 		for (let i = 0; i < num; i++) {
-			add(test);
+			add(() => test()); // add different function with each iteration
 		}
-		await sleep(++num * step);
+		await sleep((num + 1) * duration);
 
-		const [min, max] = pad(500, 0.02);
-		expect(last).to.be.gte(min);
-		expect(last).to.be.lte(max);
+		const [min, max] = pad(num * duration);
+		expect(elapsed).to.be.gte(min);
+		expect(elapsed).to.be.lte(max);
+	});
+
+	it('debounces repeated calls', async () => {
+		let num = 5;
+		let duration = 100;
+		let elapsed = 0;
+
+		const { add, next } = createQueue();
+		const timer = createTimer();
+		const test = () => sleep(duration).then(() => (elapsed = timer())).then(next);
+		for (let i = 0; i < num; i++) {
+			add(test); // add identical function multiple times
+		}
+		await sleep((num + 1) * duration);
+
+		const [min, max] = pad(duration);
+		expect(elapsed).to.be.gte(min);
+		expect(elapsed).to.be.lte(max);
 	});
 });
 
