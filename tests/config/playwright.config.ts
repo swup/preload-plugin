@@ -56,7 +56,18 @@ export default defineConfig({
 	/* Configure projects for major browsers */
 	projects: [
 		{ name: 'chromium', use: { ...devices['Desktop Chrome'] } },
-		{ name: 'firefox', use: { ...devices['Desktop Firefox'] } },
+		{ name: 'firefox', use: {
+				...devices['Desktop Firefox'],
+				launchOptions: {
+					firefoxUserPrefs: {
+						// https://github.com/microsoft/playwright/issues/7769#issuecomment-966098074
+						// Set to support fine pointer: 0x02 = FINE_POINTER; 0x04 = HOVER_CAPABLE_POINTER
+						'ui.primaryPointerCapabilities': 0x02 | 0x04,
+						'ui.allPointerCapabilities': 0x02 | 0x04
+					}
+				}
+			}
+		},
 		{ name: 'webkit', use: { ...devices['Desktop Safari'] } },
 		{ name: 'ios', use: { ...devices['iPhone 13'] } }
 	],
