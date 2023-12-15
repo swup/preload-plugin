@@ -42,7 +42,7 @@ test.describe('preload attributes', () => {
 	});
 });
 
-test.describe('preload initial page', () => {
+test.describe('initial page', () => {
 	test('preloads initial page', async ({ page }) => {
 		await page.goto('/page-1.html');
 		await waitForSwup(page);
@@ -57,7 +57,7 @@ test.describe('preload initial page', () => {
 	});
 });
 
-test.describe('preload active links', () => {
+test.describe('active links', () => {
 	test.beforeEach(async ({ page }) => {
 		await page.goto('/page-1.html');
 		await waitForSwup(page);
