@@ -14,3 +14,6 @@ wiki-wishlist
 .editorconfig
 .idea
 /dist
+/tests/fixtures/dist
+/tests/reports
+/tests/results
