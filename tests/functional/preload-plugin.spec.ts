@@ -19,12 +19,12 @@ test.describe('instance methods', () => {
 		expect(await page.evaluate(() => typeof window._swup.preloadLinks)).toBe('function');
 	});
 	test('allows preloading individual page', async ({ page }) => {
-		await page.evaluate(() => window._swup.preload('/page-2.html'));
+		await page.evaluate(() => window._swup.preload!('/page-2.html'));
 		await expectSwupToHaveCacheEntry(page, '/page-2.html');
 		await expectSwupNotToHaveCacheEntry(page, '/page-3.html');
 	});
 	test('allows preloading multiple pages', async ({ page }) => {
-		await page.evaluate(() => window._swup.preload(['/page-2.html', '/page-3.html']));
+		await page.evaluate(() => window._swup.preload!(['/page-2.html', '/page-3.html']));
 		await expectSwupToHaveCacheEntry(page, '/page-2.html');
 		await expectSwupToHaveCacheEntry(page, '/page-3.html');
 	});
@@ -82,13 +82,34 @@ test.describe('preload active links', () => {
 
 		await page.evaluate(() => {
 			// Rewrite url to make sure the cached page is from preloading
-			window._swup.hooks.on('visit:start', (visit) => {
-				visit.to.url = '/page-3.html';
-			});
+			window._swup.hooks.on('visit:start', (visit) => (visit.to.url = '/page-3.html'));
 		});
 		await expectSwupNotToHaveCacheEntry(page, '/page-2.html');
 		await page.tap('a[href="/page-2.html"]');
 		await expectSwupToHaveCacheEntry(page, '/page-2.html');
 		await expectSwupToHaveCacheEntry(page, '/page-3.html');
+	});
+});
+
+test.describe('hooks', () => {
+	test.beforeEach(async ({ page }) => {
+		await page.goto('/page-1.html');
+		await waitForSwup(page);
+	});
+	test('triggers page:preload hook on focus', async ({ page }) => {
+		await page.evaluate(() => {
+			window._swup.hooks.on('page:preload', () => (window.data = true));
+		});
+		await page.focus('a[href="/page-2.html"]');
+		const triggered = () => page.evaluate(() => window.data);
+		await expect(async () => expect(await triggered()).toBe(true)).toPass();
+	});
+	test('triggers page:preload hook from API', async ({ page }) => {
+		await page.evaluate(() => {
+			window._swup.hooks.on('page:preload', () => (window.data = true));
+			window._swup.preload!('/page-2.html');
+		});
+		const triggered = () => page.evaluate(() => window.data);
+		await expect(async () => expect(await triggered()).toBe(true)).toPass();
 	});
 });
