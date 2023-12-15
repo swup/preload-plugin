@@ -67,7 +67,7 @@ type PreloadOptions = {
 export default class SwupPreloadPlugin extends Plugin {
 	name = 'SwupPreloadPlugin';
 
-	requires = { swup: '>=4' };
+	requires = { swup: '>=4.5' };
 
 	defaults: PluginOptions = {
 		throttle: 5,
