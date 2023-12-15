@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<title>Preload visible links with options</title>
+		<link rel="stylesheet" href="/assets/style.css" />
+		<style>
+			#swup li + li,
+			#swup ul + ul li:first-child {
+				margin-top: 50vh;
+			}
+		</style>
+	</head>
+	<body>
+		<main id="swup" class="transition-main">
+			<h1>Preload visible links with options</h1>
+			<p>Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua.</p>
+			<ul class="preload-container">
+				<li><a href="/page-1.html">Page 1</a></li>
+				<li><a href="/page-2.html">Page 2</a></li>
+				<li><a href="/page-3.html">Page 3</a></li>
+				<li><a href="/page-4.html">Page 4</a></li>
+				<li><a href="/page-5.html">Page 5</a></li>
+				<li><a href="/page-6.html">Page 6</a></li>
+				<li><a href="/page-7.html">Page 7</a></li>
+				<li><a href="/page-8.html">Page 8</a></li>
+			</ul>
+			<ul>
+				<li><a href="/page-9.html">Page 9</a></li>
+			</ul>
+		</main>
+		<script src="/dist/swup.umd.js"></script>
+		<script src="/dist/index.umd.js"></script>
+		<script>
+			window._swup = new Swup({
+				plugins: [new SwupPreloadPlugin({
+					preloadVisibleLinks: {
+						enabled: true,
+						delay: 10,
+						containers: ['.preload-container'],
+						ignore: (el) => el.pathname.includes('page-2')
+					}
+				})]
+			});
+		</script>
+	</body>
+</html>

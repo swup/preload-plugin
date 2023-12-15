@@ -137,6 +137,16 @@ test.describe('visible links', () => {
 		await scroll(page, { direction: 'down', delay: 100 });
 		await expectSwupToHaveCacheEntries(page, ['/page-3.html', '/page-6.html', '/page-8.html', '/page-9.html']);
 	});
+
+	test('allows configuring options', async ({ page }) => {
+		await page.goto('/visible-links-options.html');
+		await expectSwupToHaveCacheEntries(page, ['/page-1.html']);
+		// Scroll down quickly, still preloading in the middle
+		await scroll(page, { direction: 'down', delay: 10 });
+		await expectSwupToHaveCacheEntries(page, ['/page-3.html', '/page-6.html', '/page-8.html']);
+		await expectSwupNotToHaveCacheEntries(page, ['/page-2.html']); // ignored via ignore()
+		await expectSwupNotToHaveCacheEntries(page, ['/page-9.html']); // ignored via containers
+	});
 });
 
 test.describe('throttle', () => {
