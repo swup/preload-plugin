@@ -56,3 +56,39 @@ test.describe('preload initial page', () => {
 		await expectSwupNotToHaveCacheEntry(page, '/preload-initial-disabled.html');
 	});
 });
+
+test.describe('preload active links', () => {
+	test.beforeEach(async ({ page }) => {
+		await page.goto('/page-1.html');
+		await waitForSwup(page);
+	});
+
+	test('preloads links on focus', async ({ page }) => {
+		await expectSwupNotToHaveCacheEntry(page, '/page-2.html');
+		await page.focus('a[href="/page-2.html"]');
+		await expectSwupToHaveCacheEntry(page, '/page-2.html');
+	});
+
+	test('preloads links on hover', async ({ page, isMobile }) => {
+		test.skip(isMobile, 'test hover on desktop only');
+
+		await expectSwupNotToHaveCacheEntry(page, '/page-2.html');
+		await page.hover('a[href="/page-2.html"]');
+		await expectSwupToHaveCacheEntry(page, '/page-2.html');
+	});
+
+	test('preloads links on touchstart', async ({ page, isMobile }) => {
+		test.skip(!isMobile, 'test touch on mobile only');
+
+		await page.evaluate(() => {
+			// Rewrite url to make sure the cached page is from preloading
+			window._swup.hooks.on('visit:start', (visit) => {
+				visit.to.url = '/page-3.html';
+			});
+		});
+		await expectSwupNotToHaveCacheEntry(page, '/page-2.html');
+		await page.tap('a[href="/page-2.html"]');
+		await expectSwupToHaveCacheEntry(page, '/page-2.html');
+		await expectSwupToHaveCacheEntry(page, '/page-3.html');
+	});
+});
