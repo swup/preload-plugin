@@ -6,7 +6,11 @@ import {
 	waitForSwup,
 	navigateWithSwup,
 	expectSwupToHaveCacheEntry,
-	expectSwupNotToHaveCacheEntry
+	expectSwupNotToHaveCacheEntry,
+	expectSwupToHaveCacheEntries,
+	expectSwupNotToHaveCacheEntries,
+	scroll,
+	scrollTo
 } from './inc/commands.js';
 
 test.describe('instance methods', () => {
@@ -88,6 +92,50 @@ test.describe('active links', () => {
 		await page.tap('a[href="/page-2.html"]');
 		await expectSwupToHaveCacheEntry(page, '/page-2.html');
 		await expectSwupToHaveCacheEntry(page, '/page-3.html');
+	});
+});
+
+test.describe('visible links', () => {
+	test.beforeEach(async ({ page }) => {
+		await page.goto('/visible-links.html');
+	});
+
+	test('does not by default preload links initially in view', async ({ page }) => {
+		await page.goto('/page-1.html');
+		await sleep(200);
+		await expectSwupNotToHaveCacheEntries(page, ['/page-2.html', '/page-3.html']);
+	});
+
+	test('preloads links initially in view', async ({ page }) => {
+		await expectSwupNotToHaveCacheEntries(page, ['/page-1.html', '/page-2.html', '/page-3.html']);
+		// await sleep(500);
+		await expectSwupToHaveCacheEntries(page, ['/page-1.html', '/page-2.html']);
+		await expectSwupNotToHaveCacheEntries(page, ['/page-3.html', '/page-4.html']);
+	});
+
+	test('preloads links after viewport change', async ({ page }) => {
+		await expectSwupToHaveCacheEntries(page, ['/page-1.html', '/page-2.html']);
+		await expectSwupNotToHaveCacheEntries(page, ['/page-3.html', '/page-4.html']);
+		// Scroll page link #3 into view
+		await scrollTo(page, 'a[href="/page-3.html"]');
+		await expectSwupToHaveCacheEntries(page, ['/page-3.html', '/page-4.html']);
+	});
+
+	test('skips links when scrolling by quickly', async ({ page }) => {
+		await expectSwupToHaveCacheEntries(page, ['/page-1.html', '/page-2.html']);
+		await expectSwupNotToHaveCacheEntries(page, ['/page-3.html', '/page-9.html']);
+		// Scroll down quickly, skipping links in the middle
+		await scroll(page, { direction: 'down', delay: 10 });
+		await expectSwupToHaveCacheEntries(page, ['/page-9.html']);
+		await expectSwupNotToHaveCacheEntries(page, ['/page-5.html']);
+	});
+
+	test('preloads links when scrolling by slowly', async ({ page }) => {
+		await expectSwupToHaveCacheEntries(page, ['/page-1.html', '/page-2.html']);
+		await expectSwupNotToHaveCacheEntries(page, ['/page-3.html', '/page-9.html']);
+		// Scroll down slowly, preloading links in the middle
+		await scroll(page, { direction: 'down', delay: 100 });
+		await expectSwupToHaveCacheEntries(page, ['/page-3.html', '/page-6.html', '/page-8.html', '/page-9.html']);
 	});
 });
 
