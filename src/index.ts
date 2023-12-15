@@ -26,7 +26,10 @@ declare module 'swup' {
 	}
 	export interface HookDefinitions {
 		'link:hover': { el: HTMLAnchorElement; event: DelegateEvent };
-		'page:preload': { page: PageData };
+		'page:preload': { page?: PageData };
+	}
+	export interface HookReturnValues {
+		'page:preload': Promise<PageData>;
 	}
 }
 
@@ -391,8 +394,10 @@ export default class SwupPreloadPlugin extends Plugin {
 	 * Perform the actual preload fetch and trigger the preload hook.
 	 */
 	protected async performPreload(url: string): Promise<PageData> {
-		const page = await this.swup.fetchPage(url);
-		await this.swup.hooks.call('page:preload', { page });
+		const page = await this.swup.hooks.call('page:preload', undefined, {}, async (visit, args) => {
+			args.page = await this.swup.fetchPage(url);
+			return args.page;
+		});
 		return page;
 	}
 }
