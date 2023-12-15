@@ -196,7 +196,7 @@ export default class SwupPreloadPlugin extends Plugin {
 		const el = event.delegateTarget;
 		if (!(el instanceof HTMLAnchorElement)) return;
 
-		this.swup.hooks.callSync('link:hover', { el, event });
+		this.swup.hooks.callSync('link:hover', undefined, { el, event });
 		this.preload(el, { priority: true });
 	};
 
