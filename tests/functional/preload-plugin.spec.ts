@@ -91,6 +91,34 @@ test.describe('active links', () => {
 	});
 });
 
+test.describe('throttle', () => {
+	test.beforeEach(async ({ page }) => {
+		await page.goto('/throttle.html');
+		await waitForSwup(page);
+	});
+	test('limits number of concurrent requests', async ({ page }) => {
+		await page.evaluate(() => {
+			window.data = {
+				count: 0,
+				max: 0,
+				inc() {
+					this.count++;
+					this.max = Math.max(this.max, this.count);
+				},
+				dec() {
+					this.count--;
+				}
+			};
+			window._swup.hooks.before('page:preload', () => (window.data.inc()));
+			window._swup.hooks.on('page:preload', () => (window.data.dec()));
+			window._swup.preload!([1, 2, 3, 4, 5, 6, 7, 8].map((n) => `/page-${n}.html`));
+		});
+		await page.focus('a[href="/page-2.html"]');
+		const max = () => page.evaluate(() => window.data.max);
+		await expect(async () => expect(await max()).toBe(4)).toPass();
+	});
+});
+
 test.describe('hooks', () => {
 	test.beforeEach(async ({ page }) => {
 		await page.goto('/page-1.html');
