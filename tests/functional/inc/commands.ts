@@ -1,5 +1,6 @@
 import { expect, Page } from '@playwright/test';
 import type Swup from 'swup';
+import type SwupPreloadPlugin from '../../../src/index';
 
 declare global {
 	interface Window {
