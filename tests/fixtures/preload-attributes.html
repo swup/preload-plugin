@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<title>Preload initial page</title>
+		<link rel="stylesheet" href="/assets/style.css" />
+	</head>
+	<body>
+		<main id="swup" class="transition-main">
+			<h1>Preload initial page</h1>
+			<p>Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua.</p>
+			<ul>
+				<li><a href="/page-1.html" data-swup-preload>Page 1</a></li>
+				<li><a href="/page-2.html">Page 2</a></li>
+				<li data-swup-preload-all><a href="/page-3.html">Page 3</a></li>
+			</ul>
+		</main>
+		<script src="/dist/swup.umd.js"></script>
+		<script src="/dist/index.umd.js"></script>
+		<script>
+			window._swup = new Swup({
+				plugins: [new SwupPreloadPlugin()]
+			});
+		</script>
+	</body>
+</html>

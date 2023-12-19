@@ -1,0 +1,25 @@
+*, *:before, *:after {
+  box-sizing: border-box;
+}
+
+:root {
+  --red: hsl(0, 74%, 67%);
+  --green: hsl(100, 68%, 58%);
+  --blue: oklch(59.12% 0.153 230.82);
+}
+
+body {
+  font-family: system-ui;
+  padding: 1rem;
+  max-width: 800px;
+  margin: 5% auto;
+}
+
+h1, h2, ul {
+  margin-bottom: 1rem;
+}
+
+:focus-visible {
+  box-shadow: 0 0 0 3px gold;
+  outline: 0;
+}

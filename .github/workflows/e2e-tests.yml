@@ -1,0 +1,40 @@
+name: E2E tests
+
+on:
+  push:
+    branches: [main, master, next]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  run-tests:
+    name: E2E tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Check out repo
+        uses: actions/checkout@v3
+
+      - name: Set up node
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Bundle library
+        run: npm run build
+
+      - name: Install browsers
+        run: npx playwright install --with-deps
+
+      - name: Run tests
+        run: npx playwright test --config ./tests/config/playwright.config.ts
+
+      - name: Create report comment
+        uses: daun/playwright-report-summary@v2
+        if: always()
+        with:
+          report-file: playwright-results.json
