@@ -257,7 +257,7 @@ export default class SwupPreloadPlugin extends Plugin {
 		// Allow passing in an anchor element
 		else if (input instanceof HTMLAnchorElement) {
 			el = input;
-			({ url } = Location.fromElement(input));
+			({ href: url } = Location.fromElement(input));
 		}
 		// Allow passing in a url
 		else if (typeof input === 'string') {
