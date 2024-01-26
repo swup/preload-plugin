@@ -1,3 +1,6 @@
+import { Location } from 'swup';
+
+import { AnchorElement } from './index.js';
 import { whenIdle } from './util.js';
 
 export type Observer = {
@@ -16,19 +19,19 @@ export default function createObserver({
 	threshold: number;
 	delay: number;
 	containers: string[];
-	callback: (el: HTMLAnchorElement) => void;
-	filter: (el: HTMLAnchorElement) => boolean;
+	callback: (el: AnchorElement) => void;
+	filter: (el: AnchorElement) => boolean;
 }): Observer {
-	const visibleLinks = new Map<string, Set<HTMLAnchorElement>>();
+	const visibleLinks = new Map<string, Set<AnchorElement>>();
 
 	// Create an observer to add/remove links when they enter the viewport
 	const observer = new IntersectionObserver(
 		(entries) => {
 			entries.forEach((entry) => {
 				if (entry.isIntersecting) {
-					add(entry.target as HTMLAnchorElement);
+					add(entry.target as AnchorElement);
 				} else {
-					remove(entry.target as HTMLAnchorElement);
+					remove(entry.target as AnchorElement);
 				}
 			});
 		},
@@ -36,13 +39,14 @@ export default function createObserver({
 	);
 
 	// Preload link if it is still visible after a configurable timeout
-	const add = (el: HTMLAnchorElement) => {
-		const elements = visibleLinks.get(el.href) ?? new Set();
-		visibleLinks.set(el.href, elements);
+	const add = (el: AnchorElement) => {
+		const { href } = Location.fromElement(el);
+		const elements = visibleLinks.get(href) ?? new Set();
+		visibleLinks.set(href, elements);
 		elements.add(el);
 
 		setTimeout(() => {
-			const elements = visibleLinks.get(el.href);
+			const elements = visibleLinks.get(href);
 			if (elements?.size) {
 				callback(el);
 				observer.unobserve(el);
@@ -52,7 +56,10 @@ export default function createObserver({
 	};
 
 	// Remove link from list of visible links
-	const remove = (el: HTMLAnchorElement) => visibleLinks.get(el.href)?.delete(el);
+	const remove = (el: AnchorElement) => {
+		const { href } = Location.fromElement(el);
+		visibleLinks.get(href)?.delete(el);
+	};
 
 	// Clear list of visible links
 	const clear = () => visibleLinks.clear();
@@ -60,8 +67,8 @@ export default function createObserver({
 	// Scan DOM for preloadable links and start observing their visibility
 	const observe = () => {
 		whenIdle(() => {
-			const selector = containers.map((root) => `${root} a[href]`).join(', ');
-			const links = Array.from(document.querySelectorAll<HTMLAnchorElement>(selector));
+			const selector = containers.map((root) => `${root} a[href], ${root} a[*|href]`).join(', ');
+			const links = Array.from(document.querySelectorAll<AnchorElement>(selector));
 			links.filter((el) => filter(el)).forEach((el) => observer.observe(el));
 		});
 	};
