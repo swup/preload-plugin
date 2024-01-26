@@ -93,6 +93,14 @@ test.describe('active links', () => {
 		await expectSwupToHaveCacheEntry(page, '/page-2.html');
 		await expectSwupToHaveCacheEntry(page, '/page-3.html');
 	});
+
+	test('preloads svg links', async ({ page }) => {
+		await page.goto('/link-types.html');
+		await waitForSwup(page);
+		await expectSwupNotToHaveCacheEntry(page, '/page-2.html');
+		await page.focus('svg a', { strict: true });
+		await expectSwupToHaveCacheEntry(page, '/page-2.html');
+	});
 });
 
 test.describe('visible links', () => {
