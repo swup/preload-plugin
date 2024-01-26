@@ -1,5 +1,9 @@
 # Changelog
 
+## [3.2.8] - 2023-10-20
+
+- Ignore external links on hover
+
 ## [3.2.7] - 2023-10-20
 
 - Fix `options.preloadHoveredLinks`
@@ -111,6 +115,7 @@
 
 - Initial release
 
+[3.2.8]: https://github.com/swup/preload-plugin/releases/tag/3.2.8
 [3.2.7]: https://github.com/swup/preload-plugin/releases/tag/3.2.7
 [3.2.6]: https://github.com/swup/preload-plugin/releases/tag/3.2.6
 [3.2.5]: https://github.com/swup/preload-plugin/releases/tag/3.2.5
