@@ -270,6 +270,9 @@ export default class SwupPreloadPlugin extends Plugin {
 			return;
 		}
 
+		// Return if no url passed in
+		if (!url) return;
+
 		// Already preloading? Return existing promise
 		if (this.preloadPromises.has(url)) {
 			return this.preloadPromises.get(url);
