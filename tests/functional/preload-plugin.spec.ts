@@ -207,3 +207,28 @@ test.describe('hooks', () => {
 		await expect(async () => expect(await triggered()).toBe(true)).toPass();
 	});
 });
+
+test.describe('ignores external origins', () => {
+	test.beforeEach(async ({ page }) => {
+		await page.goto('/origins.html');
+		await waitForSwup(page);
+		await page.evaluate(() => {
+			window.data = [];
+			window._swup.hooks.before('page:preload', (visit, { url }) => (window.data.push(url)));
+		});
+	});
+	test('ignores link elements with external origin', async ({ page }) => {
+		await page.focus('a[href$="/page-1.html"]');
+		await page.focus('a[href$="/page-2.html"]');
+		await page.focus('a[href$="/page-3.html"]');
+		const urls = await page.evaluate(() => window.data);
+		expect(urls).toEqual(['/page-1.html', '/page-2.html']);
+	});
+	test('ignores preload requests with external origin', async ({ page }) => {
+		await page.evaluate(() => {
+			window._swup.preload!(['https://example.net/page-3.html', '/page-1.html', 'page-2.html']);
+		});
+		const urls = await page.evaluate(() => window.data);
+		expect(urls).toEqual(['/page-1.html', '/page-2.html']);
+	});
+});
