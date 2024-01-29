@@ -1,6 +1,12 @@
 # Changelog
 
-## [3.2.8] - 2023-10-20
+## [3.2.9] - 2024-01-29
+
+- Respect swup's link selector option
+- Support preloading links in SVGs
+- Create temporary visits for preload hooks
+
+## [3.2.8] - 2024-01-26
 
 - Ignore external links on hover
 
@@ -115,6 +121,7 @@
 
 - Initial release
 
+[3.2.9]: https://github.com/swup/preload-plugin/releases/tag/3.2.9
 [3.2.8]: https://github.com/swup/preload-plugin/releases/tag/3.2.8
 [3.2.7]: https://github.com/swup/preload-plugin/releases/tag/3.2.7
 [3.2.6]: https://github.com/swup/preload-plugin/releases/tag/3.2.6
