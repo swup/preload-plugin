@@ -67,7 +67,7 @@ export default function createObserver({
 	// Scan DOM for preloadable links and start observing their visibility
 	const observe = () => {
 		whenIdle(() => {
-			const selector = containers.map((root) => `${root} a[href], ${root} a[*|href]`).join(', ');
+			const selector = containers.map((root) => `${root} a[*|href]`).join(', ');
 			const links = Array.from(document.querySelectorAll<AnchorElement>(selector));
 			links.filter((el) => filter(el)).forEach((el) => observer.observe(el));
 		});
