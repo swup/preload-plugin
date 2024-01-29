@@ -198,7 +198,12 @@ export default class SwupPreloadPlugin extends Plugin {
 		const el = event.delegateTarget;
 		if (!isAnchorElement(el)) return;
 
-		this.swup.hooks.callSync('link:hover', undefined, { el, event });
+		// Create temporary visit object for link:hover hook
+		const { url: to, hash } = Location.fromElement(el);
+		// @ts-expect-error: createVisit is currently private, need to make this semi-public somehow
+		const visit = this.swup.createVisit({ to, hash, el, event });
+
+		this.swup.hooks.callSync('link:hover', visit, { el, event });
 		this.preload(el, { priority: true });
 	};
 
@@ -404,7 +409,12 @@ export default class SwupPreloadPlugin extends Plugin {
 	 */
 	protected async performPreload(href: string): Promise<PageData> {
 		const { url } = Location.fromUrl(href);
-		const page = await this.swup.hooks.call('page:preload', undefined, { url }, async (visit, args) => {
+
+		// Create temporary visit object for page:preload hook
+		// @ts-expect-error: createVisit is currently private, need to make this semi-public somehow
+		const visit = this.swup.createVisit({ to: url });
+
+		const page = await this.swup.hooks.call('page:preload', visit, { url }, async (visit, args) => {
 			args.page = await this.swup.fetchPage(href);
 			return args.page;
 		});
