@@ -1,6 +1,5 @@
 import { expect, Page } from '@playwright/test';
 import type Swup from 'swup';
-import type SwupPreloadPlugin from '../../../src/index';
 
 declare global {
 	interface Window {
@@ -61,19 +60,19 @@ export async function navigateWithSwup(
 export async function expectToBeAt(page: Page, url: string, title?: string) {
 	await expect(page).toHaveURL(url);
 	if (title) {
-		await expect(page).toHaveTitle(title);
-		await expect(page.locator('h1')).toContainText(title);
+		await expect(page, `Expected title: ${title}`).toHaveTitle(title);
+		await expect(page.locator('h1'), `Expected h1: ${title}`).toContainText(title);
 	}
 }
 
 export async function expectSwupToHaveCacheEntry(page: Page, url: string) {
 	const exists = () => page.evaluate((url) => window._swup.cache.has(url), url);
-	await expect(async () => expect(await exists()).toBe(true)).toPass();
+	await expect(async () => expect(await exists(), `Expected ${url} to be in cache`).toBe(true)).toPass();
 }
 
 export async function expectSwupNotToHaveCacheEntry(page: Page, url: string) {
 	const exists = () => page.evaluate((url) => window._swup.cache.has(url), url);
-	expect(await exists()).toBe(false);
+	expect(await exists(), `Expected ${url} not to be in cache`).toBe(false);
 }
 
 export async function expectSwupToHaveCacheEntries(page: Page, urls: string[]) {

@@ -22,6 +22,13 @@ export function deviceSupportsHover() {
 }
 
 /**
+ * Is this element an anchor element?
+ */
+export function isAnchorElement(element: unknown): element is HTMLAnchorElement | SVGAElement {
+	return !!element && (element instanceof HTMLAnchorElement || element instanceof SVGAElement);
+}
+
+/**
  * Safe requestIdleCallback function that falls back to setTimeout
  */
 export const whenIdle = window.requestIdleCallback || ((cb) => setTimeout(cb, 1));

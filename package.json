@@ -58,13 +58,13 @@
     "@swup/plugin": "^4.0.0"
   },
   "devDependencies": {
-    "@playwright/test": "^1.39.0",
+    "@playwright/test": "^1.41.1",
     "@swup/cli": "^5.0.1",
     "@types/jsdom": "^21.1.4",
-    "jsdom": "^22.1.0",
+    "jsdom": "^24.0.0",
     "network-information-types": "^0.1.1",
     "serve": "^14.2.1",
-    "vitest": "^0.34.6"
+    "vitest": "^1.2.2"
   },
   "peerDependencies": {
     "swup": "^4.0.0"

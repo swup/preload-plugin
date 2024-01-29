@@ -93,6 +93,21 @@ test.describe('active links', () => {
 		await expectSwupToHaveCacheEntry(page, '/page-2.html');
 		await expectSwupToHaveCacheEntry(page, '/page-3.html');
 	});
+
+	test('respects swup link selector', async ({ page }) => {
+		await page.goto('/link-selector-default.html');
+		await waitForSwup(page);
+		await page.focus('svg a');
+		await sleep(200);
+		await expectSwupNotToHaveCacheEntry(page, '/page-2.html');
+	});
+
+	test('allows modified swup link selector', async ({ page }) => {
+		await page.goto('/link-selector-modified.html');
+		await waitForSwup(page);
+		await page.focus('svg a');
+		await expectSwupToHaveCacheEntry(page, '/page-2.html');
+	});
 });
 
 test.describe('visible links', () => {
@@ -146,6 +161,14 @@ test.describe('visible links', () => {
 		await expectSwupToHaveCacheEntries(page, ['/page-3.html', '/page-6.html', '/page-8.html']);
 		await expectSwupNotToHaveCacheEntries(page, ['/page-2.html']); // ignored via ignore()
 		await expectSwupNotToHaveCacheEntries(page, ['/page-9.html']); // ignored via containers
+	});
+
+	test('respects swup link selector', async ({ page }) => {
+		await page.goto('/visible-links-selector.html');
+		// await scroll(page, { direction: 'down', delay: 10 });
+		await sleep(200);
+		await expectSwupToHaveCacheEntries(page, ['/page-1.html', '/page-3.html', '/page-5.html']);
+		await expectSwupNotToHaveCacheEntries(page, ['/page-2.html', '/page-4.html']); // ignored via linkSelector option
 	});
 });
 
