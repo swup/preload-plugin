@@ -359,7 +359,9 @@ export default class SwupPreloadPlugin extends Plugin {
 		const filter = (el: AnchorElement) => {
 			/** First, run the custom callback */
 			if (this.options.preloadVisibleLinks.ignore(el)) return false;
-			/** Second, run all default checks */
+			/** Second, check if it's a valid swup link */
+			if (!el.matches(this.swup.options.linkSelector)) return false;
+			/** Third, run all default checks */
 			const { href } = Location.fromElement(el);
 			return this.shouldPreload(href, { el });
 		};
