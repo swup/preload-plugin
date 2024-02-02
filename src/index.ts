@@ -138,7 +138,6 @@ export default class SwupPreloadPlugin extends Plugin {
 		swup.hooks.create('page:preload');
 		swup.hooks.create('link:hover');
 
-		// @ts-ignore: non-matching signatures (TODO: fix properly)
 		swup.preload = this.preload;
 		swup.preloadLinks = this.preloadLinks;
 
