@@ -1,5 +1,9 @@
 # Changelog
 
+## [3.2.10] - 2024-02-02
+
+- Fix: Make sure preload requests are not being ignored
+
 ## [3.2.9] - 2024-01-29
 
 - Respect swup's link selector option
@@ -121,6 +125,7 @@
 
 - Initial release
 
+[3.2.10]: https://github.com/swup/preload-plugin/releases/tag/3.2.10
 [3.2.9]: https://github.com/swup/preload-plugin/releases/tag/3.2.9
 [3.2.8]: https://github.com/swup/preload-plugin/releases/tag/3.2.8
 [3.2.7]: https://github.com/swup/preload-plugin/releases/tag/3.2.7
