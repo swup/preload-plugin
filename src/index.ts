@@ -7,7 +7,12 @@ import type {
 	PageData,
 	HookDefaultHandler
 } from 'swup';
-import { deviceSupportsHover, networkSupportsPreloading, whenIdle, isAnchorElement } from './util.js';
+import {
+	deviceSupportsHover,
+	networkSupportsPreloading,
+	whenIdle,
+	isAnchorElement
+} from './util.js';
 import createQueue, { Queue } from './queue.js';
 import createObserver, { Observer } from './observer.js';
 
@@ -26,7 +31,7 @@ declare module 'swup' {
 	}
 	export interface HookDefinitions {
 		'link:hover': { el: HTMLAnchorElement | SVGAElement; event: DelegateEvent };
-		'page:preload': { url: string, page?: PageData };
+		'page:preload': { url: string; page?: PageData };
 	}
 	export interface HookReturnValues {
 		'page:preload': Promise<PageData>;
@@ -414,10 +419,15 @@ export default class SwupPreloadPlugin extends Plugin {
 		// @ts-expect-error: createVisit is currently private, need to make this semi-public somehow
 		const visit = this.swup.createVisit({ to: url });
 
-		const page = await this.swup.hooks.call('page:preload', visit, { url }, async (visit, args) => {
-			args.page = await this.swup.fetchPage(href);
-			return args.page;
-		});
+		const page = await this.swup.hooks.call(
+			'page:preload',
+			visit,
+			{ url },
+			async (visit, args) => {
+				args.page = await this.swup.fetchPage(href, { visit });
+				return args.page;
+			}
+		);
 		return page;
 	}
 }
