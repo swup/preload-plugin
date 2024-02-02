@@ -424,6 +424,7 @@ export default class SwupPreloadPlugin extends Plugin {
 			visit,
 			{ url },
 			async (visit, args) => {
+				// @ts-expect-error FetchOptions.visit is currently marked as internal
 				args.page = await this.swup.fetchPage(href, { visit });
 				return args.page;
 			}
