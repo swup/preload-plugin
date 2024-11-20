@@ -43,7 +43,7 @@ test.describe('instance methods', () => {
 		expect(typeof result.url).toBe('string');
 		expect(typeof result.html).toBe('string');
 	});
-	test.only('returns the preload promise if currently preloading', async ({ page }) => {
+	test('returns the preload promise if currently preloading', async ({ page }) => {
 		const result = await page.evaluate(async () => {
 			window._swup.preload!('/page-2.html');
 			const second = await window._swup.preload!('/page-2.html');
