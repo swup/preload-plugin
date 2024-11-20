@@ -287,6 +287,16 @@ export default class SwupPreloadPlugin extends Plugin {
 			return this.preloadPromises.get(url);
 		}
 
+		// Already in cache?
+		if (this.swup.cache.has(url)) {
+			return this.swup.cache.get(url);
+		}
+
+		// // Already preloading?
+		if (this.preloadPromises.has(url)) {
+			return this.preloadPromises.get(url);
+		}
+
 		// Should we preload?
 		if (!this.shouldPreload(url, { el })) {
 			return;
