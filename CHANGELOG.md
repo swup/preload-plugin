@@ -1,5 +1,9 @@
 # Changelog
 
+## [3.2.11] - 2024-11-20
+
+- Return cached data or pending promise for `swup.preload()` if already preloaded or preloading
+
 ## [3.2.10] - 2024-02-02
 
 - Fix: Make sure preload requests are not being ignored
@@ -125,6 +129,7 @@
 
 - Initial release
 
+[3.2.11]: https://github.com/swup/preload-plugin/releases/tag/3.2.11
 [3.2.10]: https://github.com/swup/preload-plugin/releases/tag/3.2.10
 [3.2.9]: https://github.com/swup/preload-plugin/releases/tag/3.2.9
 [3.2.8]: https://github.com/swup/preload-plugin/releases/tag/3.2.8
