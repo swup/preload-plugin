@@ -32,6 +32,28 @@ test.describe('instance methods', () => {
 		await expectSwupToHaveCacheEntry(page, '/page-2.html');
 		await expectSwupToHaveCacheEntry(page, '/page-3.html');
 	});
+	test('returns the cache entry if already preloaded', async ({ page }) => {
+		const result = await page.evaluate(async () => {
+			await window._swup.preload!('/page-2.html');
+			const second = window._swup.preload!('/page-2.html');
+			return second;
+		});
+		expect(result).toHaveProperty('url');
+		expect(result).toHaveProperty('html');
+		expect(typeof result.url).toBe('string');
+		expect(typeof result.html).toBe('string');
+	});
+	test.only('returns the preload promise if currently preloading', async ({ page }) => {
+		const result = await page.evaluate(async () => {
+			window._swup.preload!('/page-2.html');
+			const second = await window._swup.preload!('/page-2.html');
+			return second;
+		});
+		expect(result).toHaveProperty('url');
+		expect(result).toHaveProperty('html');
+		expect(typeof result.url).toBe('string');
+		expect(typeof result.html).toBe('string');
+	});
 });
 
 test.describe('preload attributes', () => {
@@ -122,7 +144,11 @@ test.describe('visible links', () => {
 	});
 
 	test('preloads links initially in view', async ({ page }) => {
-		await expectSwupNotToHaveCacheEntries(page, ['/page-1.html', '/page-2.html', '/page-3.html']);
+		await expectSwupNotToHaveCacheEntries(page, [
+			'/page-1.html',
+			'/page-2.html',
+			'/page-3.html'
+		]);
 		// await sleep(500);
 		await expectSwupToHaveCacheEntries(page, ['/page-1.html', '/page-2.html']);
 		await expectSwupNotToHaveCacheEntries(page, ['/page-3.html', '/page-4.html']);
@@ -150,7 +176,12 @@ test.describe('visible links', () => {
 		await expectSwupNotToHaveCacheEntries(page, ['/page-3.html', '/page-9.html']);
 		// Scroll down slowly, preloading links in the middle
 		await scroll(page, { direction: 'down', delay: 100 });
-		await expectSwupToHaveCacheEntries(page, ['/page-3.html', '/page-6.html', '/page-8.html', '/page-9.html']);
+		await expectSwupToHaveCacheEntries(page, [
+			'/page-3.html',
+			'/page-6.html',
+			'/page-8.html',
+			'/page-9.html'
+		]);
 	});
 
 	test('allows configuring options', async ({ page }) => {
@@ -190,8 +221,8 @@ test.describe('throttle', () => {
 					this.count--;
 				}
 			};
-			window._swup.hooks.before('page:preload', () => (window.data.inc()));
-			window._swup.hooks.on('page:preload', () => (window.data.dec()));
+			window._swup.hooks.before('page:preload', () => window.data.inc());
+			window._swup.hooks.on('page:preload', () => window.data.dec());
 			window._swup.preload!([1, 2, 3, 4, 5, 6, 7, 8].map((n) => `/page-${n}.html`));
 		});
 		await page.focus('a[href="/page-2.html"]');
@@ -229,7 +260,7 @@ test.describe('ignores external origins', () => {
 		await waitForSwup(page);
 		await page.evaluate(() => {
 			window.data = [];
-			window._swup.hooks.before('page:preload', (visit, { url }) => (window.data.push(url)));
+			window._swup.hooks.before('page:preload', (visit, { url }) => window.data.push(url));
 		});
 	});
 	test('ignores link elements with external origin', async ({ page }) => {
@@ -241,7 +272,11 @@ test.describe('ignores external origins', () => {
 	});
 	test('ignores preload requests with external origin', async ({ page }) => {
 		await page.evaluate(() => {
-			window._swup.preload!(['https://example.net/page-3.html', '/page-1.html', 'page-2.html']);
+			window._swup.preload!([
+				'https://example.net/page-3.html',
+				'/page-1.html',
+				'page-2.html'
+			]);
 		});
 		const urls = await page.evaluate(() => window.data);
 		expect(urls).toEqual(['/page-1.html', '/page-2.html']);
