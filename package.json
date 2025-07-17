@@ -64,7 +64,7 @@
     "jsdom": "^24.0.0",
     "network-information-types": "^0.1.1",
     "serve": "^14.2.1",
-    "vitest": "^1.2.2"
+    "vitest": "^3.2.4"
   },
   "peerDependencies": {
     "swup": "^4.0.0"
