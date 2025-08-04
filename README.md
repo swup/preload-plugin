@@ -2,8 +2,8 @@
 
 <!-- swup-docs-ignore-start -->
 
-[![Unit Tests](https://img.shields.io/github/actions/workflow/status/swup/preload-plugin/unit-tests.yml?branch=next&label=unit%20tests)](https://github.com/swup/preload-plugin/actions/workflows/unit-tests.yml)
-[![E2E Tests](https://img.shields.io/github/actions/workflow/status/swup/preload-plugin/e2e-tests.yml?branch=next&label=e2e%20tests)](https://github.com/swup/preload-plugin/actions/workflows/e2e-tests.yml)
+[![Unit Tests](https://img.shields.io/github/actions/workflow/status/swup/preload-plugin/unit-tests.yml?branch=main&label=unit%20tests)](https://github.com/swup/preload-plugin/actions/workflows/unit-tests.yml)
+[![E2E Tests](https://img.shields.io/github/actions/workflow/status/swup/preload-plugin/e2e-tests.yml?branch=main&label=e2e%20tests)](https://github.com/swup/preload-plugin/actions/workflows/e2e-tests.yml)
 [![License](https://img.shields.io/github/license/swup/preload-plugin.svg)](https://github.com/swup/preload-plugin/blob/main/LICENSE)
 
 <!-- swup-docs-ignore-end -->
