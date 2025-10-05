@@ -201,6 +201,7 @@ export default class SwupPreloadPlugin extends Plugin {
 
 		const el = event.delegateTarget;
 		if (!isAnchorElement(el)) return;
+		if (el.hasAttribute('data-swup-no-preload')) return;
 
 		// Create temporary visit object for link:hover hook
 		const { url: to, hash } = Location.fromElement(el);
@@ -371,11 +372,13 @@ export default class SwupPreloadPlugin extends Plugin {
 		const { threshold, delay, containers } = this.options.preloadVisibleLinks;
 		const callback = (el: AnchorElement) => this.preload(el);
 		const filter = (el: AnchorElement) => {
-			/** First, run the custom callback */
-			if (this.options.preloadVisibleLinks.ignore(el)) return false;
+			/** First, look for opt-out attribute */
+			if (el.hasAttribute('data-swup-no-preload')) return false;
 			/** Second, check if it's a valid swup link */
 			if (!el.matches(this.swup.options.linkSelector)) return false;
-			/** Third, run all default checks */
+			/** Third, run the custom callback */
+			if (this.options.preloadVisibleLinks.ignore(el)) return false;
+			/** Fourth, run all default checks */
 			const { href } = Location.fromElement(el);
 			return this.shouldPreload(href, { el });
 		};
