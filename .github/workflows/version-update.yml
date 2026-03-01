@@ -19,10 +19,10 @@ jobs:
     name: Update package version
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-node@v2
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
         with:
-          node-version: 16
+          node-version: 24
       - run: echo "Updating ${{ inputs.segment }} version"
       - name: Update version
         run: npm --no-git-tag-version version ${{ inputs.segment }}
