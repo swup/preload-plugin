@@ -5,6 +5,7 @@ import {
 	clickOnLink,
 	waitForSwup,
 	navigateWithSwup,
+	expectNoPageReload,
 	expectSwupToHaveCacheEntry,
 	expectSwupNotToHaveCacheEntry,
 	expectSwupToHaveCacheEntries,
@@ -280,5 +281,89 @@ test.describe('ignores external origins', () => {
 		});
 		const urls = await page.evaluate(() => window.data);
 		expect(urls).toEqual(['/page-1.html', '/page-2.html']);
+	});
+});
+
+test.describe('page:load args', () => {
+	test.beforeEach(async ({ page }) => {
+		await page.goto('/page-1.html');
+		await waitForSwup(page);
+		await page.evaluate(() => {
+			window._swup.hooks.on('page:load', (visit, args) => {
+				window.data = { page: args.page, cache: args.cache };
+			});
+		});
+	});
+
+	test('provides page data when reusing an in-flight preload', async ({ page }) => {
+		let releasePreload!: () => void;
+		let markRequestStarted!: () => void;
+		const requestStarted = new Promise<void>((resolve) => (markRequestStarted = resolve));
+		const release = new Promise<void>((resolve) => (releasePreload = resolve));
+
+		await page.route('**/page-2.html', async (route) => {
+			markRequestStarted();
+			await release;
+			await route.continue();
+		});
+
+		await page.evaluate(() => {
+			window._swup.preload!('/page-2.html');
+		});
+		await requestStarted;
+		await clickOnLink(page, '/page-2.html');
+		await sleep(500);
+		releasePreload();
+
+		await expect(page.locator('h1')).toHaveText('Page 2', { timeout: 5000 });
+
+		const pageArgs = await page.evaluate(() => window.data);
+		expect(pageArgs.page).toBeTruthy();
+		expect(pageArgs.page.url).toContain('/page-2.html');
+		expect(pageArgs.page.html).toContain('Page 2');
+		expect(pageArgs.cache).toBe(false);
+	});
+
+	test('recovers when a reused in-flight preload fails', async ({ page }) => {
+		let requestCount = 0;
+		let releasePreload!: () => void;
+		let markRequestStarted!: () => void;
+		const requestStarted = new Promise<void>((resolve) => (markRequestStarted = resolve));
+		const release = new Promise<void>((resolve) => (releasePreload = resolve));
+
+		await page.route('**/page-2.html', async (route) => {
+			requestCount++;
+			if (requestCount === 1) {
+				markRequestStarted();
+				await release;
+				await route.abort();
+			} else {
+				await route.continue();
+			}
+		});
+
+		await expectNoPageReload(page, async () => {
+			await page.evaluate(() => {
+				window._swup.preload!('/page-2.html');
+			});
+			await requestStarted;
+			await clickOnLink(page, '/page-2.html');
+			await sleep(500);
+			releasePreload();
+
+			await expect(page.locator('h1')).toHaveText('Page 2', { timeout: 5000 });
+		});
+
+		const pageArgs = await page.evaluate(() => window.data);
+		expect(pageArgs?.page).toBeTruthy();
+	});
+
+	test('provides page data when no preload is in flight', async ({ page }) => {
+		await navigateWithSwup(page, '/page-2.html');
+		await expect(page.locator('h1')).toHaveText('Page 2');
+
+		const pageArgs = await page.evaluate(() => window.data);
+		expect(pageArgs?.page).toBeTruthy();
+		expect(pageArgs.page.url).toContain('/page-2.html');
 	});
 });
