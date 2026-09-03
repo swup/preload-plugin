@@ -181,10 +181,15 @@ export default class SwupPreloadPlugin extends Plugin {
 	/**
 	 * Before core page load: return existing preload promise if available.
 	 */
-	protected onPageLoad: HookDefaultHandler<'page:load'> = (visit, args, defaultHandler) => {
+	protected onPageLoad: HookDefaultHandler<'page:load'> = async (visit, args, defaultHandler) => {
 		const { url } = visit.to;
-		if (url && this.preloadPromises.has(url)) {
-			return this.preloadPromises.get(url) as Promise<PageData>;
+		const preloadPromise = url ? this.preloadPromises.get(url) : undefined;
+		// A preload can fail and end up with no page to reuse
+		const page = (await preloadPromise?.catch(() => undefined)) ?? null;
+		if (page) {
+			args.page = page;
+			args.cache = false;
+			return page;
 		}
 		return defaultHandler!(visit, args);
 	};
