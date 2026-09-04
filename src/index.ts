@@ -183,7 +183,9 @@ export default class SwupPreloadPlugin extends Plugin {
 	 */
 	protected onPageLoad: HookDefaultHandler<'page:load'> = async (visit, args, defaultHandler) => {
 		const { url } = visit.to;
+
 		const preloadPromise = url ? this.preloadPromises.get(url) : undefined;
+
 		// A preload can fail and end up with no page to reuse
 		const page = (await preloadPromise?.catch(() => undefined)) ?? null;
 		if (page) {
@@ -191,6 +193,7 @@ export default class SwupPreloadPlugin extends Plugin {
 			args.cache = false;
 			return page;
 		}
+
 		return defaultHandler!(visit, args);
 	};
 
