@@ -188,13 +188,13 @@ export default class SwupPreloadPlugin extends Plugin {
 
 		// A preload can fail and end up with no page to reuse
 		const page = (await preloadPromise?.catch(() => undefined)) ?? null;
-		if (page) {
-			args.page = page;
-			args.cache = false;
-			return page;
+		if (!page) {
+			return defaultHandler!(visit, args);
 		}
 
-		return defaultHandler!(visit, args);
+		args.page = page;
+		args.cache = false;
+		return page;
 	};
 
 	/**
