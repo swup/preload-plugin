@@ -16,6 +16,20 @@ export function sleep(timeout = 0): Promise<void> {
 	return new Promise((resolve) => setTimeout(() => resolve(undefined), timeout));
 }
 
+function documentOrigin(page: Page) {
+	return page.evaluate(() => Math.floor(window.performance.timeOrigin));
+}
+
+export async function expectNoPageReload(
+	page: Page,
+	action: (page: Page) => Promise<unknown> | unknown
+) {
+	const before = await documentOrigin(page);
+	await action(page);
+	await sleep(500);
+	expect(await documentOrigin(page)).toEqual(before);
+}
+
 export async function clickOnLink(page: Page, url: string, options?: Parameters<Page['click']>[1]) {
 	await page.click(`a[href="${url}"]`, options);
 	await expectToBeAt(page, url);

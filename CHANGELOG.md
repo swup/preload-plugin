@@ -1,5 +1,10 @@
 # Changelog
 
+## [3.2.12] - 2026-09-03
+
+- Set `args.page` when a navigation reuses an in-flight preload
+- Fall back to a fresh fetch when an in-flight preload fails instead of aborting the visit
+
 ## [3.2.11] - 2024-11-20
 
 - Return cached data or pending promise for `swup.preload()` if already preloaded or preloading
@@ -129,6 +134,7 @@
 
 - Initial release
 
+[3.2.12]: https://github.com/swup/preload-plugin/releases/tag/3.2.12
 [3.2.11]: https://github.com/swup/preload-plugin/releases/tag/3.2.11
 [3.2.10]: https://github.com/swup/preload-plugin/releases/tag/3.2.10
 [3.2.9]: https://github.com/swup/preload-plugin/releases/tag/3.2.9
