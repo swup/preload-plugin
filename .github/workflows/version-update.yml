@@ -26,10 +26,11 @@ jobs:
       - run: echo "Updating ${{ inputs.segment }} version"
       - name: Update version
         run: npm --no-git-tag-version version ${{ inputs.segment }}
-      - uses: peter-evans/create-pull-request@v4
+      - uses: peter-evans/create-pull-request@v8
         with:
           base: 'main'
           branch: 'version/automated'
           title: 'Update package version (automated)'
           commit-message: 'Update package version'
           body: 'Automated update to ${{ inputs.segment }} version'
+          token: ${{ secrets.DISPATCH_TOKEN }}
